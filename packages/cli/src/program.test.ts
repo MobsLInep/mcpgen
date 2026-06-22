@@ -12,4 +12,10 @@ describe("@mcpgen/cli", () => {
     const commands = program.commands.map((c) => c.name());
     expect(commands).toContain("info");
   });
+
+  it("registers the inspect command", () => {
+    const program = buildProgram();
+    const commands = program.commands.map((c) => c.name());
+    expect(commands).toContain("inspect");
+  });
 });

@@ -1,0 +1,1 @@
+just some prose that is neither an OpenAPI spec nor a GraphQL schema.

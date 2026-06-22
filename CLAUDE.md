@@ -80,12 +80,18 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
 ## Phase plan
 
-- **Phase 0 — Scaffolding (current).** Monorepo, tooling, CI, empty packages,
+- **Phase 0 — Scaffolding (done).** Monorepo, tooling, CI, empty packages,
   placeholder web/api, trivial passing tests. **No generation logic.**
-- **Phase 1 — Core engine + OpenAPI.** Parse an OpenAPI spec → intermediate
-  representation → render a typed MCP server via `templates`. CLI: `mcpgen generate`.
-- **Phase 2 — GraphQL + repo inputs.** Add GraphQL schema and code-repo input
-  adapters feeding the same IR.
+- **Phase 1 — Input ingestion (current).** Deterministic, LLM-free parsing in
+  `packages/core`, behind a common `Source` interface, normalizing every input
+  to the shared IR (`ToolCandidate[]` + `SourceMetadata`). All three parsers
+  landed together: OpenAPI 3.0/3.1 (`@readme/openapi-parser`), GraphQL
+  SDL/introspection (`graphql`), and Express/Fastify code (`ts-morph`,
+  best-effort + low-confidence). CLI: `mcpgen inspect <source>` prints a
+  tool-candidate table. IR lives in `packages/core/src/ir.ts`; fixtures in
+  `packages/core/test/fixtures`. **No rendering yet — `templates` stays empty.**
+- **Phase 2 — Render engine + `generate`.** Render the IR into typed MCP server
+  source via `packages/templates`. CLI: `mcpgen generate`.
 - **Phase 3 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
   generate-and-download flow.
 - **Phase 4 — Deploy targets.** One-command deploy of generated servers.
