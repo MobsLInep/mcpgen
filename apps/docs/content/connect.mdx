@@ -1,0 +1,102 @@
+---
+title: Connect to a client
+---
+
+import { Tabs, Callout } from "nextra/components";
+
+# Connect to an AI client
+
+Once your server is built (`npm install && npm run build`), wire it into an MCP
+client. The generated `README.md` already contains config filled in with your
+server's name and absolute path — this page explains the shapes.
+
+<Callout type="info">
+  For **stdio**, the client launches the server as a subprocess, so it needs the
+  absolute path to `dist/server.js`. For **http**, run the server yourself and
+  give the client its URL.
+</Callout>
+
+## Claude Desktop
+
+Edit `claude_desktop_config.json` (Settings → Developer → Edit Config):
+
+```jsonc
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "node",
+      "args": ["/absolute/path/to/my-server/dist/server.js"],
+      "env": {
+        "MCPGEN_API_BASE_URL": "https://api.example.com",
+        "MCPGEN_API_KEY": "...",
+      },
+    },
+  },
+}
+```
+
+Restart Claude Desktop; your tools appear in the 🔌 tools menu.
+
+## Cursor
+
+Cursor uses the same `mcpServers` shape, in `~/.cursor/mcp.json` (global) or
+`.cursor/mcp.json` (per-project):
+
+```jsonc
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "node",
+      "args": ["/absolute/path/to/my-server/dist/server.js"],
+    },
+  },
+}
+```
+
+## VS Code
+
+VS Code uses a `servers` key (note: different from the two above) and supports
+both transports:
+
+<Tabs items={["stdio", "http"]}>
+  <Tabs.Tab>
+
+```jsonc
+// .vscode/mcp.json
+{
+  "servers": {
+    "my-server": {
+      "command": "node",
+      "args": ["/absolute/path/to/my-server/dist/server.js"],
+    },
+  },
+}
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+Run `MCPGEN_TRANSPORT=http node dist/server.js`, then:
+
+```jsonc
+// .vscode/mcp.json
+{
+  "servers": {
+    "my-server": { "type": "http", "url": "http://localhost:3000/mcp" },
+  },
+}
+```
+
+  </Tabs.Tab>
+</Tabs>
+
+## Verify the connection
+
+After connecting, ask the agent to list its tools — you should see the operations
+from your source. If a call fails, check that:
+
+- `MCPGEN_API_BASE_URL` and any credentials are set (in the config `env` block or
+  the process environment);
+- for stdio, the path points at the **built** `dist/server.js` (run `npm run
+build` first);
+- for http, the server is running and the URL ends in `/mcp`.

@@ -1,0 +1,59 @@
+---
+title: From a codebase
+---
+
+import { Callout } from "nextra/components";
+
+# Generate from a codebase
+
+When you don't have a spec, mcpgen can read an **Express** or **Fastify**
+codebase and infer routes statically. This is the lowest-fidelity input — it's a
+best-effort static analysis, not execution — so candidates come with **lower
+confidence** and should be reviewed.
+
+## Supported
+
+- **Express** and **Fastify** route definitions, analyzed with `ts-morph`.
+- Point mcpgen at the project directory (or the routes folder).
+
+## Generate
+
+```bash
+npx mcpgen generate ./my-api --out ./my-server
+```
+
+Always inspect first — the table flags low-confidence candidates:
+
+```bash
+npx mcpgen inspect ./my-api
+```
+
+## How routes map to tools
+
+| Code                         | IR / generated tool                                |
+| ---------------------------- | -------------------------------------------------- |
+| `app.get("/users/:id", ...)` | a tool bound to `GET /users/{id}`                  |
+| `:param` path segments       | `path` input fields                                |
+| handler / route metadata     | best-effort description + provenance (`file:line`) |
+| inferred confidence          | lower than spec inputs; review before shipping     |
+
+<Callout type="warning">
+  Static analysis can't see everything a server does at runtime — dynamically
+  registered routes, middleware-mounted routers, and computed paths may be
+  missed or guessed. Treat the output as a strong starting point, then refine
+  the generated tool definitions. If you have an OpenAPI spec, prefer it.
+</Callout>
+
+## Tips
+
+- **Confidence** — candidates at or below the low-confidence threshold are
+  flagged in `inspect`; double-check their paths and params.
+- **Provenance** — every candidate records the `file:line` it came from, so you
+  can jump straight to the source to verify.
+- **Generate a spec instead** — if your framework can emit OpenAPI, generating
+  from that spec will give a far cleaner result.
+
+## Next
+
+- [Choosing a transport](/guides/transport)
+- [Adding auth](/guides/auth)

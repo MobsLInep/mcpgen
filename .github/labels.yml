@@ -1,0 +1,64 @@
+# mcpgen label set.
+#
+# Apply with the seeding script:  ./scripts/seed-issues.sh
+# (or any label-sync action that reads this file). Each entry is name / color /
+# description. Colors are 6-hex, no leading '#'.
+
+# --- Type ------------------------------------------------------------------
+- name: bug
+  color: d73a4a
+  description: Something isn't working.
+- name: enhancement
+  color: a2eeef
+  description: New feature or request.
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to docs.
+- name: question
+  color: d876e3
+  description: Further information is requested.
+
+# --- Workflow --------------------------------------------------------------
+- name: needs-triage
+  color: ededed
+  description: Awaiting initial review by a maintainer.
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers — scoped and well described.
+- name: help wanted
+  color: 008672
+  description: Extra attention is wanted.
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on.
+- name: duplicate
+  color: cfd3d7
+  description: This issue or PR already exists.
+
+# --- Area ------------------------------------------------------------------
+- name: "area: cli"
+  color: fbca04
+  description: The mcpgen command-line interface.
+- name: "area: core"
+  color: fbca04
+  description: The generation engine (packages/core).
+- name: "area: templates"
+  color: fbca04
+  description: Generated MCP server templates.
+- name: "area: verify"
+  color: fbca04
+  description: Verification & self-repair loop.
+- name: "area: web"
+  color: fbca04
+  description: Web UI + API.
+- name: "area: docs"
+  color: fbca04
+  description: Documentation site.
+
+# --- Priority --------------------------------------------------------------
+- name: "priority: high"
+  color: b60205
+  description: Should be addressed soon.
+- name: "priority: low"
+  color: 0e8a16
+  description: Nice to have.

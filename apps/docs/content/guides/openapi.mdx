@@ -1,0 +1,62 @@
+---
+title: From an OpenAPI spec
+---
+
+import { Callout } from "nextra/components";
+
+# Generate from an OpenAPI spec
+
+OpenAPI is mcpgen's highest-fidelity input. Each operation becomes one MCP tool,
+with parameters, request bodies, auth, and (when present) response schemas
+carried straight into the IR.
+
+## Supported
+
+- **OpenAPI 3.0 and 3.1**, JSON or YAML.
+- Local file path or — in the web UI — pasted text or an `http(s)` URL the server
+  fetches.
+- `$ref`s are dereferenced (via `@readme/openapi-parser`) before parsing.
+
+## Generate
+
+```bash
+npx mcpgen generate ./openapi.yaml --out ./my-server
+```
+
+Inspect first if you want to see the tool set:
+
+```bash
+npx mcpgen inspect ./openapi.yaml
+```
+
+## How operations map to tools
+
+| OpenAPI                               | IR / generated tool                                                 |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `operationId`                         | sanitized into the MCP tool name (`[A-Za-z0-9_-]`, deduped)         |
+| `summary` / `description`             | the tool description shown to the agent                             |
+| path / query / header / cookie params | tool input fields with matching `location`                          |
+| `requestBody`                         | `body` input field(s), Zod-validated                                |
+| `responses` content schema            | the tool's `outputSchema` (used to mock the upstream during verify) |
+| `security` + `securitySchemes`        | the server's auth wiring (see [Adding auth](/guides/auth))          |
+| `servers[].url`                       | default `MCPGEN_API_BASE_URL`                                       |
+
+<Callout type="info">
+  No `operationId`? mcpgen derives a stable name from the method and path (e.g.
+  `GET /pets/{petId}` → `getPetsPetId`) and guarantees uniqueness.
+</Callout>
+
+## Tips
+
+- **Base URL** — if the spec has no `servers`, set `MCPGEN_API_BASE_URL` in the
+  generated `.env` before running.
+- **Large specs** — hundreds of operations generate fine; use `inspect` to sanity
+  check the tool count first.
+- **Response schemas help verification** — specs that describe responses get
+  better mocked-upstream smoke tests, since mcpgen can sample realistic results.
+
+## Next
+
+- [Choosing a transport](/guides/transport)
+- [Adding auth](/guides/auth)
+- [Deploying](/guides/deploying)

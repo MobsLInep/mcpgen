@@ -1,0 +1,69 @@
+---
+title: Contributing
+---
+
+import { Callout } from "nextra/components";
+
+# Contributing
+
+Contributions are very welcome. mcpgen is MIT-licensed and built to be hacked on.
+
+## Prerequisites
+
+- **Node 20+** (`.nvmrc` pins the major; run `nvm use`).
+- **pnpm 9+** (`corepack enable` provides the pinned version).
+
+## Local development
+
+```bash
+git clone https://github.com/MobsLInep/mcpgen
+cd mcpgen
+pnpm install
+pnpm build
+```
+
+The full local gate — everything CI runs — is:
+
+```bash
+pnpm install && pnpm build && pnpm lint && pnpm typecheck && pnpm test
+```
+
+Two extra gates run in CI and are worth running before a PR:
+
+```bash
+pnpm test:coverage   # enforces engine + verify coverage thresholds
+pnpm security:lint   # OWASP secure-MCP audit (needs a prior build)
+```
+
+## Project layout
+
+See [Architecture](/architecture). The one rule to internalize: **keep
+`packages/core` pure.** If you reach for `next`, `http`, or server-heavy `fs`
+inside `core`, it probably belongs in `cli`/`api`.
+
+## Conventions
+
+- TypeScript **strict** everywhere — no `any` without a justified
+  `// eslint-disable`.
+- **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`, `test:`).
+- Tests import from `src` (not `dist`) so `pnpm test` works without a build.
+- Read [`CLAUDE.md`](https://github.com/MobsLInep/mcpgen/blob/main/CLAUDE.md)
+  before adding code so the stack stays consistent.
+
+## Good first issues
+
+New here? Look for the
+[`good first issue`](https://github.com/MobsLInep/mcpgen/labels/good%20first%20issue)
+label — those are scoped, well-described, and a friendly way in.
+
+## Filing issues & PRs
+
+- Use the issue templates (bug report / feature request).
+- Open PRs against `main`; fill in the PR template and check the boxes.
+- All of `build`, `typecheck`, `lint`, `test` must pass.
+
+<Callout type="info">
+  By participating you agree to abide by our [Code of
+  Conduct](https://github.com/MobsLInep/mcpgen/blob/main/CODE_OF_CONDUCT.md)
+  (Contributor Covenant). Be kind.
+</Callout>

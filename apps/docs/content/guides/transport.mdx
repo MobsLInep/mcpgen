@@ -1,0 +1,74 @@
+---
+title: Choosing a transport
+---
+
+import { Callout } from "nextra/components";
+
+# Choosing a transport
+
+MCP servers speak to clients over a **transport**. mcpgen generates a server that
+supports both of the standard ones, and you pick the default at generation time:
+
+```bash
+npx mcpgen generate ./openapi.yaml --out ./my-server --transport stdio   # default
+npx mcpgen generate ./openapi.yaml --out ./my-server --transport http
+```
+
+The generated server reads `MCPGEN_TRANSPORT` at runtime too, so you can switch
+without regenerating.
+
+## stdio
+
+The server runs as a **subprocess** of the client and talks over stdin/stdout.
+
+- **Best for:** local, single-user setups — Claude Desktop, Cursor, VS Code on
+  your machine.
+- **Auth/network:** none needed; the client launches the process directly.
+- **Run:** `MCPGEN_TRANSPORT=stdio node dist/server.js`
+
+```jsonc
+// Claude Desktop / Cursor config
+{
+  "mcpServers": {
+    "my-server": { "command": "node", "args": ["/abs/path/dist/server.js"] },
+  },
+}
+```
+
+## Streamable HTTP
+
+The server listens on a port and serves MCP over **Streamable HTTP** at `/mcp`,
+with a `/healthz` liveness probe.
+
+- **Best for:** remote/shared deployments, or connecting over the network.
+- **Auth/network:** terminate TLS at the edge; set CORS and DNS-rebinding
+  protection (below).
+- **Run:** `MCPGEN_TRANSPORT=http node dist/server.js` (defaults to port 3000).
+
+```jsonc
+// VS Code (http)
+{
+  "servers": {
+    "my-server": { "type": "http", "url": "http://localhost:3000/mcp" },
+  },
+}
+```
+
+<Callout type="warning">
+  For any **remote** HTTP deployment, harden the transport: set
+  `MCPGEN_ALLOWED_HOSTS` to your public domain(s) to enable DNS-rebinding
+  protection, set `MCPGEN_CORS_ORIGIN` to your client's origin (not `*`), and
+  put TLS in front of it. See [Deploying](/guides/deploying).
+</Callout>
+
+## Which should I pick?
+
+|                      | stdio       | Streamable HTTP            |
+| -------------------- | ----------- | -------------------------- |
+| Local, one user      | ✅ simplest | works, more setup          |
+| Remote / shared      | ✗           | ✅                         |
+| Needs a network port | no          | yes (`/mcp`, `/healthz`)   |
+| Hardening required   | minimal     | TLS + CORS + allowed-hosts |
+
+When in doubt, start with **stdio** for local use and switch to **http** when you
+deploy.

@@ -51,25 +51,26 @@ operations as MCP tools an AI agent can call.
 
 These are intentional and should not be swapped without a deliberate decision:
 
-| Concern              | Choice                                                                                                                                 |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Package manager      | **pnpm** (workspaces)                                                                                                                  |
-| Monorepo task runner | **Turborepo**                                                                                                                          |
-| Language             | **TypeScript**, `strict` mode, ESM                                                                                                     |
-| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext**                                                                    |
-| CLI framework        | **commander**                                                                                                                          |
-| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)                                                                         |
-| Web                  | **Next.js 15**, App Router, React 19                                                                                                   |
-| Web styling          | **Tailwind v4** (`@theme` tokens) + hand-vendored shadcn-style primitives (cva/clsx/tailwind-merge), **lucide-react** icons — no Radix |
-| API server           | standalone **`node:http`** (no framework), **jszip** for downloads                                                                     |
-| E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                    |
-| Lint                 | **ESLint flat config** + typescript-eslint                                                                                             |
-| Format               | **Prettier**                                                                                                                           |
-| Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                    |
-| Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                  |
-| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                     |
-| Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                              |
-| Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgen`, web image to **GHCR** |
+| Concern              | Choice                                                                                                                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package manager      | **pnpm** (workspaces)                                                                                                                              |
+| Monorepo task runner | **Turborepo**                                                                                                                                      |
+| Language             | **TypeScript**, `strict` mode, ESM                                                                                                                 |
+| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext**                                                                                |
+| CLI framework        | **commander**                                                                                                                                      |
+| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)                                                                                     |
+| Web                  | **Next.js 15**, App Router, React 19                                                                                                               |
+| Web styling          | **Tailwind v4** (`@theme` tokens) + hand-vendored shadcn-style primitives (cva/clsx/tailwind-merge), **lucide-react** icons — no Radix             |
+| API server           | standalone **`node:http`** (no framework), **jszip** for downloads                                                                                 |
+| E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                                |
+| Lint                 | **ESLint flat config** + typescript-eslint                                                                                                         |
+| Format               | **Prettier**                                                                                                                                       |
+| Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                              |
+| Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                            |
+| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                                |
+| Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                                         |
+| Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgen`, web image to **GHCR**            |
+| Docs site            | **Nextra 4** (Next.js 15 App Router) in `apps/docs`; MDX in `content/`. Pinned to **zod 4.3.x** in its subtree (theme incompatible with zod ≥ 4.4) |
 
 Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
@@ -224,7 +225,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   newer Node builtin than Node 20 ships); the generated server's own Dockerfile
   stays on `node:20-alpine` since it uses plain `npm`, not pnpm.
 
-- **Phase 7 — Testing & security hardening (current).** No new features — make
+- **Phase 7 — Testing & security hardening (done).** No new features — make
   what exists bulletproof before launch. **Coverage:** Vitest now runs with
   **`@vitest/coverage-v8`** (`pnpm test:coverage`) and enforces per-glob
   thresholds in `vitest.config.ts` — the generation engine
@@ -262,6 +263,38 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   tests to `test:coverage`; new `codeql.yml` (security-extended) and
   `dependabot.yml` (npm + actions). **Docs:** root `SECURITY.md` (disclosure
   policy) + `THREAT_MODEL.md` (STRIDE-framed, maps each control to code).
+
+- **Phase 8 — Docs, landing polish & launch kit (done, final phase).** No engine
+  changes — make the project legible and launch-ready. **Docs site:** a new
+  **`apps/docs`** workspace is a **Nextra 4** site on Next 15 App Router (catch-all
+  `app/[[...mdxPath]]/page.jsx` + `app/layout.jsx` + `mdx-components.js`; MDX in
+  `content/` with `_meta.js` nav). Pages: Introduction, Quickstart, Concepts (IR +
+  generation + verification), Guides (`guides/{openapi,graphql,codebase,transport,
+auth,deploying}`), Connect to a client (Claude Desktop/Cursor/VS Code),
+  Architecture (with the monorepo diagram), Contributing. It builds + typechecks
+  via Turbo (`apps/docs/turbo.json` makes typecheck depend on build, like web).
+  NOTE: **nextra-theme-docs 4.6 is incompatible with zod ≥ 4.4** — its `Layout`
+  strips `children` before validating against a schema that still requires it, and
+  zod 4.4 rejects the now-missing key (older zod treated a missing `z.custom` key
+  as present, throwing the "expected nonoptional, received undefined → at children"
+  error). Fixed by a **scoped pnpm override in `pnpm-workspace.yaml`**
+  (`nextra>zod` / `nextra-theme-docs>zod` → `4.3.5`) so only the Nextra subtree
+  downgrades; `packages/core` + `apps/api` keep zod 4.4.x (what the Anthropic SDK
+  is built against). pnpm 11 reads overrides from `pnpm-workspace.yaml`, **not**
+  `package.json`. An explicit `app/not-found.jsx` is required or the `/_not-found`
+  prerender fails. **README:** rewritten into a launch landing — one-liner, badge
+  row (CI/CodeQL/npm/node/license/stars), inline `docs/assets/demo.svg` terminal
+  cast, "why this exists", 3-line quickstart, feature bullets, a "why not
+  hand-write it?" comparison table, the pipeline diagram, monorepo table, and a
+  roadmap (stateless Streamable HTTP for the 2026-07-28 spec + Python/FastMCP
+  output). **Launch kit:** `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1),
+  `CHANGELOG.md` (Keep-a-Changelog, `0.1.0`), refreshed `CONTRIBUTING.md`,
+  `.github/ISSUE_TEMPLATE/{bug_report,feature_request}.yml` + `config.yml`,
+  `.github/PULL_REQUEST_TEMPLATE.md`, `.github/labels.yml`, an idempotent
+  `scripts/seed-issues.sh` (gh CLI — creates labels + **5 seeded
+  `good first issue`s**; not auto-run against the live repo), and a launch
+  checklist in `docs/launch.md`. The demo asset is a hand-written SVG terminal;
+  replace it with a real asciinema GIF before posting (see `docs/launch.md`).
 
 > When starting a new phase, update this section and the locked-stack table if a
 > decision genuinely changes — don't let the docs drift from the code.

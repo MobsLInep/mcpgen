@@ -1,0 +1,68 @@
+---
+title: Introduction
+---
+
+import { Cards } from "nextra/components";
+
+# mcpgen
+
+**mcpgen** turns an existing API surface — an **OpenAPI spec**, a **GraphQL
+schema**, or a **code repository** — into a working, typed, deployable
+[Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. The
+generated server exposes the source API's operations as MCP **tools** that an AI
+agent (Claude Desktop, Cursor, VS Code, your own agent) can call.
+
+```bash
+npx mcpgen generate ./openapi.yaml --out ./my-server
+```
+
+That single command parses your spec, plans a tool set, synthesizes typed
+handlers, renders a complete TypeScript project, and then **proves it runs** —
+installing, building, booting the server, and smoke-testing every tool against a
+mocked upstream before it hands you the code.
+
+## Why mcpgen exists
+
+The MCP ecosystem is young and the tooling is thin. Today, wrapping an existing
+API as an MCP server means hand-writing a lot of glue: a tool schema per
+endpoint, input validation, an HTTP client, auth wiring, a transport, a
+Dockerfile — and then debugging why your agent can't call any of it. That work
+is mechanical and error-prone, and it's mostly already described by the API's
+own spec.
+
+mcpgen reads that spec and does the mechanical part for you, the way it should be
+done: every input Zod-validated, every upstream URL built safely, credentials
+read from the environment, and a security posture that follows the OWASP
+secure-MCP checklist out of the box.
+
+## What you get
+
+<Cards>
+  <Cards.Card title="Quickstart" href="/quickstart" arrow>
+    Generate and run your first server in three lines.
+  </Cards.Card>
+  <Cards.Card title="Concepts" href="/concepts" arrow>
+    How the IR, generation, and verification fit together.
+  </Cards.Card>
+  <Cards.Card title="Guides" href="/guides/openapi" arrow>
+    OpenAPI, GraphQL, codebases, transports, auth, deploy.
+  </Cards.Card>
+  <Cards.Card title="Connect a client" href="/connect" arrow>
+    Wire the server into Claude Desktop, Cursor, or VS Code.
+  </Cards.Card>
+</Cards>
+
+## Highlights
+
+- **Three inputs, one IR.** OpenAPI 3.0/3.1, GraphQL SDL/introspection, and
+  Express/Fastify code all normalize to the same intermediate representation.
+- **Typed, validated handlers.** Zod-validated inputs, a single safe `http.ts`
+  request builder, env-sourced credentials.
+- **Self-verifying.** A generation that doesn't boot is a bug — mcpgen installs,
+  builds, boots, and smoke-tests the server, repairing failures with the model.
+- **Deploy-ready.** Every server ships a Dockerfile, Compose, and Fly / Render /
+  Railway configs, plus a `/healthz` probe.
+- **Secure by default.** Generated code passes an automated OWASP secure-MCP
+  audit; mcpgen's own source is linted by the same rules.
+- **Works offline.** No API key? Generation falls back to a deterministic,
+  IR-only path so you always get a server.

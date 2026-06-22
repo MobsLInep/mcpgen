@@ -1,0 +1,117 @@
+---
+title: Quickstart
+---
+
+import { Steps, Tabs, Callout } from "nextra/components";
+
+# Quickstart
+
+Go from an API spec to a running MCP server in a few minutes. You need **Node
+20+**. An `ANTHROPIC_API_KEY` is optional — without one, mcpgen generates in a
+deterministic offline mode.
+
+<Steps>
+
+### Check your environment
+
+```bash
+npx mcpgen doctor
+```
+
+`doctor` reports your Node version, whether an Anthropic key is set, and whether
+Docker is available. Add `--json` for a machine-readable report.
+
+### Inspect a source (optional)
+
+See the tools mcpgen would create before generating anything:
+
+```bash
+npx mcpgen inspect ./openapi.yaml
+```
+
+```text
+Source:    ./openapi.yaml
+Kind:      openapi
+Title:     Swagger Petstore
+Tools:     5
+
+┌─────────────┬──────────────────────┬────────┬────────┬──────┐
+│ TOOL        │ OPERATION            │ PARAMS │ AUTH   │ CONF │
+├─────────────┼──────────────────────┼────────┼────────┼──────┤
+│ listPets    │ GET /pets            │ 1      │ -      │ 1.00 │
+│ createPet   │ POST /pets           │ 1      │ apiKey │ 1.00 │
+│ showPetById │ GET /pets/{petId}    │ 1      │ -      │ 1.00 │
+└─────────────┴──────────────────────┴────────┴────────┴──────┘
+```
+
+### Generate the server
+
+<Tabs items={["Guided wizard", "One command"]}>
+  <Tabs.Tab>
+
+```bash
+npx mcpgen init
+```
+
+`init` walks you through source → transport → auth → output, then generates with
+a live spinner and prints next steps.
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+```bash
+npx mcpgen generate ./openapi.yaml --out ./my-server
+```
+
+This generates **and verifies** (install → build → boot → smoke-test). Add
+`--no-verify` to skip the loop, or `--offline` to skip the LLM entirely.
+
+  </Tabs.Tab>
+</Tabs>
+
+### Run it
+
+```bash
+cd ./my-server
+npm install && npm run build
+MCPGEN_TRANSPORT=stdio node dist/server.js
+```
+
+Set the upstream base URL and any credentials first — the generated `.env.example`
+lists every variable the server reads:
+
+```bash
+cp .env.example .env   # then edit MCPGEN_API_BASE_URL, tokens, etc.
+```
+
+### Connect it to an AI client
+
+The generated `README.md` includes copy-paste config for Claude Desktop, Cursor,
+and VS Code. See the [Connect to a client](/connect) guide.
+
+</Steps>
+
+<Callout type="info">
+  Everything in this quickstart runs **offline** if you pass `--offline` (or
+  simply don't set `ANTHROPIC_API_KEY`). With a key, mcpgen uses Claude to plan
+  a sharper tool set and write richer handler bodies.
+</Callout>
+
+## Useful flags
+
+| Flag                 | Default           | What it does                                   |
+| -------------------- | ----------------- | ---------------------------------------------- |
+| `--out <dir>`        | _required_        | Where to write the generated project.          |
+| `--transport <kind>` | `stdio`           | `stdio` or `http` (Streamable HTTP).           |
+| `--auth <mode>`      | derived           | `apikey`, `oauth`, or `none`.                  |
+| `--model <id>`       | `claude-opus-4-8` | Claude model id (or `MCPGEN_MODEL`).           |
+| `--offline`          | off               | Skip the LLM; deterministic generation only.   |
+| `--no-verify`        | verify on         | Skip the verification & self-repair loop.      |
+| `--max-repairs <n>`  | `3`               | Max self-repair iterations during verify.      |
+| `--json`             | off               | Machine-readable summary instead of the panel. |
+
+## Next steps
+
+- [Concepts](/concepts) — how the IR, generation, and verification work.
+- [Guides](/guides/openapi) — per-source walkthroughs and configuration.
+- [Deploying](/guides/deploying) — ship the server to Docker, Fly, Render, or Railway.
