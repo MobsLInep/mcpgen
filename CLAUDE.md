@@ -51,19 +51,22 @@ operations as MCP tools an AI agent can call.
 
 These are intentional and should not be swapped without a deliberate decision:
 
-| Concern              | Choice                                                              |
-| -------------------- | ------------------------------------------------------------------- |
-| Package manager      | **pnpm** (workspaces)                                               |
-| Monorepo task runner | **Turborepo**                                                       |
-| Language             | **TypeScript**, `strict` mode, ESM                                  |
-| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext** |
-| CLI framework        | **commander**                                                       |
-| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)      |
-| Web                  | **Next.js 15**, App Router, React 19                                |
-| Lint                 | **ESLint flat config** + typescript-eslint                          |
-| Format               | **Prettier**                                                        |
-| Tests                | **Vitest** (configured at the repo root)                            |
-| Node                 | **20+** (pinned via `.nvmrc` + `engines`)                           |
+| Concern              | Choice                                                                                                                                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Package manager      | **pnpm** (workspaces)                                                                                                                  |
+| Monorepo task runner | **Turborepo**                                                                                                                          |
+| Language             | **TypeScript**, `strict` mode, ESM                                                                                                     |
+| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext**                                                                    |
+| CLI framework        | **commander**                                                                                                                          |
+| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)                                                                         |
+| Web                  | **Next.js 15**, App Router, React 19                                                                                                   |
+| Web styling          | **Tailwind v4** (`@theme` tokens) + hand-vendored shadcn-style primitives (cva/clsx/tailwind-merge), **lucide-react** icons — no Radix |
+| API server           | standalone **`node:http`** (no framework), **jszip** for downloads                                                                     |
+| E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                    |
+| Lint                 | **ESLint flat config** + typescript-eslint                                                                                             |
+| Format               | **Prettier**                                                                                                                           |
+| Tests                | **Vitest** (configured at the repo root)                                                                                               |
+| Node                 | **20+** (pinned via `.nvmrc` + `engines`)                                                                                              |
 
 Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
@@ -106,11 +109,11 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   runtime, all upstream URLs are built in one safe `http.ts` (no raw
   interpolation), credentials come from env, and a `SECURITY.md` ships in the
   output. CLI: `mcpgen generate <source> --out <dir> [--transport http|stdio]
-  [--auth apikey|oauth|none] [--offline] [--model <id>]`. Tests replay one
+[--auth apikey|oauth|none] [--offline] [--model <id>]`. Tests replay one
   recorded LLM run from `packages/core/test/fixtures/llm/` via
   `ScriptedLlmClient`, so CI needs no API key.
 - **Phase 3 — Verification & self-repair (done).** A loop in
-  `packages/core/src/verify/` that *proves a generated server runs* instead of
+  `packages/core/src/verify/` that _proves a generated server runs_ instead of
   just producing it. After generation it materializes the project into a temp
   dir and runs four stages: **install** deps, **build** (the project's own
   `tsc`), **boot** (spawn the stdio server and drive it with a real MCP client —
@@ -124,7 +127,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   responses from the IR output schemas) so verification never hits a real API,
   and the whole I/O boundary (install/build/run) sits behind a `Toolchain`
   interface — the real `NodeToolchain` shells out; tests inject a fake, mirroring
-  how the model sits behind `LlmClient`. The MCP *client* runs inside a driver
+  how the model sits behind `LlmClient`. The MCP _client_ runs inside a driver
   script written into the project under test, using the SDK the project itself
   installed, so no MCP SDK dependency leaks into `core`. CLI: `mcpgen generate`
   gains `--verify` (default on; `--no-verify` to skip) and `--max-repairs <n>`,
@@ -132,7 +135,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   a build failure that gets repaired, and a budget exhaustion, all offline via
   the fake toolchain + `MockLlmClient`; the real toolchain is exercised by
   running `generate --verify` on the petstore fixture (needs a network install).
-- **Phase 4 — CLI polish & DX (current).** Turn the CLI into a finished,
+- **Phase 4 — CLI polish & DX (done).** Turn the CLI into a finished,
   trustworthy front end while keeping all logic in `core`. New commands:
   **`mcpgen init`** — a guided wizard (`packages/cli/src/init.ts`, built on
   `@clack/prompts`) that prompts for source → transport → auth → output, then
@@ -156,8 +159,38 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   `ui.test.ts`, expanded `program.test.ts`, and a hermetic child-process
   `cli.e2e.test.ts` that builds the binary via Turbo and drives the offline
   paths. A scripted demo lives in `docs/demo.md`.
-- **Phase 5 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
-  generate-and-download flow.
+- **Phase 5 — Web UI + API (current).** The public, in-browser
+  generate-and-download flow. **`apps/api`** is a standalone `node:http` service
+  (no framework, matching the repo) exposing `POST /api/parse`, `POST /api/jobs`,
+  `GET /api/jobs/:id` (+ `/events` SSE, `/files`, `/download` zip, `/config`),
+  and `/api/health`. The browser never sends a path: it pastes spec/schema text
+  or an http(s) URL the server fetches (`parse.ts` sniffs the kind, mirroring
+  core's path-based `detect.ts`, and applies the review-panel edits to the IR).
+  Generation runs as an **in-memory job** (`jobs.ts` — concurrency-limited queue,
+  buffered events so late SSE subscribers catch up, TTL eviction); the runner
+  (`runner.ts`) drives `@mcpgen/core` and forwards `verifyProject` events onto a
+  serializable `JobEvent` stream (`protocol.ts`). The Anthropic key is read from
+  the server env only and never reaches the browser; requests are **IP
+  rate-limited** (`ratelimit.ts`, fixed-window) and verification sandboxes in
+  core's self-cleaning temp dir. A deterministic **`fakeRunner`** (enabled by
+  `MCPGEN_FAKE=1`) mirrors the real event shape exactly so tests/demo run with no
+  LLM, install, or toolchain. **`apps/web`** is Next.js 15 / React 19 with a
+  custom Tailwind v4 design system (oklch color system, modular type scale,
+  blueprint-grid canvas, electric-mint signal color — `app/globals.css`), not
+  stock shadcn; UI primitives are hand-vendored in `components/ui/` (cva + clsx +
+  tailwind-merge, no Radix). The page is a landing section (hero + looping
+  `DemoLoop` + "what is MCP") above a 4-step generator (`components/generator/`):
+  source → editable review → configure (transport/auth/AI/verify) → live SSE
+  progress → result (file-tree code viewer, Download .zip, Copy Claude Desktop
+  config, Phase-6 deploy preview). Web talks to the API over HTTP only
+  (`lib/api.ts` + a duplicated `lib/protocol.ts` — it must not import API/core
+  internals), base URL via `NEXT_PUBLIC_API_URL` (default `http://localhost:3001`).
+  Tests: api `server.test.ts` (parse, full job over SSE, zip magic bytes,
+  config, rate-limit) + `ratelimit.test.ts`; web Playwright `e2e/generate.spec.ts`
+  drives the whole happy path against the fake runner (its `playwright.config.ts`
+  boots both servers with `MCPGEN_FAKE=1`). NOTE: the run-directly guard in
+  `apps/api/src/index.ts` uses `pathToFileURL` (not naive `file://${argv[1]}`)
+  because the repo path contains a space.
 - **Phase 6 — Deploy targets.** One-command deploy of generated servers.
 
 > When starting a new phase, update this section and the locked-stack table if a
