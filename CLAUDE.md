@@ -82,16 +82,32 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
 - **Phase 0 — Scaffolding (done).** Monorepo, tooling, CI, empty packages,
   placeholder web/api, trivial passing tests. **No generation logic.**
-- **Phase 1 — Input ingestion (current).** Deterministic, LLM-free parsing in
+- **Phase 1 — Input ingestion (done).** Deterministic, LLM-free parsing in
   `packages/core`, behind a common `Source` interface, normalizing every input
   to the shared IR (`ToolCandidate[]` + `SourceMetadata`). All three parsers
   landed together: OpenAPI 3.0/3.1 (`@readme/openapi-parser`), GraphQL
   SDL/introspection (`graphql`), and Express/Fastify code (`ts-morph`,
   best-effort + low-confidence). CLI: `mcpgen inspect <source>` prints a
   tool-candidate table. IR lives in `packages/core/src/ir.ts`; fixtures in
-  `packages/core/test/fixtures`. **No rendering yet — `templates` stays empty.**
-- **Phase 2 — Render engine + `generate`.** Render the IR into typed MCP server
-  source via `packages/templates`. CLI: `mcpgen generate`.
+  `packages/core/test/fixtures`.
+- **Phase 2 — Generation engine + `generate` (current).** The LLM-powered
+  engine in `packages/core/src/generate/` turns the IR into a complete, typed
+  MCP server (MCP SDK v1.x, Zod, stdio + Streamable HTTP). The Anthropic API
+  sits behind the `LlmClient` interface (`llm.ts`; key/model from env, never
+  hardcoded; default `claude-opus-4-8`). Three stages: **plan** (`plan.ts` —
+  Claude proposes the tool set; strict JSON validated with Zod + one corrective
+  retry), **synthesize** (`synthesize.ts` — per-tool Zod input shape + handler
+  body, with a deterministic IR-only fallback so generation never hard-fails),
+  and **assemble** (`assemble.ts` — render real template files from
+  `packages/templates/files/*.tmpl` into a project file map). Responses are
+  content-addressed/cached for cheap, resumable re-runs (`cache.ts`). Generated
+  code follows OWASP secure-MCP practice: every input is Zod-validated by the
+  runtime, all upstream URLs are built in one safe `http.ts` (no raw
+  interpolation), credentials come from env, and a `SECURITY.md` ships in the
+  output. CLI: `mcpgen generate <source> --out <dir> [--transport http|stdio]
+  [--auth apikey|oauth|none] [--offline] [--model <id>]`. Tests replay one
+  recorded LLM run from `packages/core/test/fixtures/llm/` via
+  `ScriptedLlmClient`, so CI needs no API key.
 - **Phase 3 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
   generate-and-download flow.
 - **Phase 4 — Deploy targets.** One-command deploy of generated servers.
