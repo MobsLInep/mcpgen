@@ -21,6 +21,10 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@mcpgen/templates": "workspace:*"
+    "@mcpgen/templates": "workspace:*",
+    "@readme/openapi-parser": "^6.1.3",
+    "graphql": "^17.0.1",
+    "ts-morph": "^28.0.0",
+    "yaml": "^2.9.0"
   }
 }

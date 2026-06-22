@@ -2,4 +2,5 @@
 **/.next/**
 **/coverage/**
 **/.turbo/**
+**/test/fixtures/**
 pnpm-lock.yaml

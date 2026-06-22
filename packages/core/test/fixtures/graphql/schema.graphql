@@ -1,0 +1,46 @@
+"""
+A tiny blog schema used as an mcpgen GraphQL test fixture.
+"""
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  "Fetch a single user by id."
+  user(id: ID!): User
+  "List published posts."
+  posts(first: Int, status: PostStatus): [Post!]!
+}
+
+type Mutation {
+  "Create a new post."
+  createPost(input: CreatePostInput!): Post!
+  "Delete a post by id."
+  deletePost(id: ID!): Boolean!
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+input CreatePostInput {
+  title: String!
+  body: String!
+  authorId: ID!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String
+}
+
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  status: PostStatus!
+  author: User!
+}
