@@ -1,0 +1,3 @@
+{
+  "text": "{\n  \"inputShape\": \"{ petId: z.number().int() }\",\n  \"handlerBody\": \"  const res = await ctx.http.request({\\n    method: \\\"DELETE\\\",\\n    path: \\\"/pets/{petId}\\\",\\n    pathParams: { petId: args.petId },\\n  });\\n  return {\\n    content: [{ type: \\\"text\\\", text: JSON.stringify(res.data, null, 2) }],\\n    isError: res.status >= 400,\\n  };\"\n}"
+}

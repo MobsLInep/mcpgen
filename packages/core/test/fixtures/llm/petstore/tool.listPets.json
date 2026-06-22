@@ -1,0 +1,3 @@
+{
+  "text": "{\n  \"inputShape\": \"{ limit: z.number().int().optional().describe(\\\"Maximum number of pets to return\\\"), tags: z.array(z.string()).optional() }\",\n  \"handlerBody\": \"  const res = await ctx.http.request({\\n    method: \\\"GET\\\",\\n    path: \\\"/pets\\\",\\n    query: { limit: args.limit, tags: args.tags },\\n  });\\n  return {\\n    content: [{ type: \\\"text\\\", text: JSON.stringify(res.data, null, 2) }],\\n    isError: res.status >= 400,\\n  };\"\n}"
+}
