@@ -30,13 +30,7 @@ After `npm run build`, point your client at the compiled entry. Replace
 
 {{CONNECT_SECTION}}
 
-## Deploy with Docker
-
-```bash
-docker build -t {{PACKAGE_NAME}} .
-docker run -p 3000:3000 --env-file .env {{PACKAGE_NAME}}
-# the server now speaks Streamable HTTP at http://localhost:3000/mcp
-```
+{{DEPLOY_SECTION}}
 
 ## Configuration
 
@@ -47,6 +41,9 @@ Configuration is read from the environment (see `.env.example`):
 | `MCPGEN_API_BASE_URL` | Upstream API base URL (default `{{API_BASE_URL}}`). |
 | `MCPGEN_TRANSPORT` | `stdio` (local) or `http` (Streamable HTTP). |
 | `MCPGEN_HTTP_PORT` | Port for the http transport (default `3000`). |
+| `MCPGEN_ALLOWED_HOSTS` | Comma-separated Host allow-list; when set, enables DNS-rebinding protection. |
+| `MCPGEN_CORS_ORIGIN` | `Access-Control-Allow-Origin` for browser clients (default `*`). |
+| `MCPGEN_OAUTH_RESOURCE` / `MCPGEN_OAUTH_AUTH_SERVER` / `MCPGEN_OAUTH_SCOPES` | OAuth 2.1 resource-server discovery (when auth is OAuth). |
 
 Credentials are read from the environment and never hardcoded — see
 `.env.example` and `SECURITY.md`.

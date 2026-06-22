@@ -60,11 +60,46 @@ async function runHttp(): Promise<void> {
   const app = express();
   app.use(express.json());
 
+  // CORS — remote/browser MCP clients need cross-origin access. Defaults to "*"
+  // for local dev; set MCPGEN_CORS_ORIGIN to your client's origin in production.
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", config.corsOrigin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Mcp-Session-Id, Mcp-Protocol-Version",
+    );
+    res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  });
+
+  // Health check for container orchestrators / load balancers (Docker, Fly,
+  // Render, Railway all probe this path).
+  app.get("/healthz", (_req, res) => {
+    res.json({
+      status: "ok",
+      server: "{{SERVER_NAME}}",
+      version: "{{SERVER_VERSION}}",
+    });
+  });
+
+{{WELL_KNOWN_SECTION}}
   app.post("/mcp", async (req, res) => {
     // Stateless mode: a fresh server + transport per request.
     const server = createServer();
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
+      // DNS-rebinding protection: reject requests whose Host header is not in
+      // the allow-list. Off when MCPGEN_ALLOWED_HOSTS is empty (local dev);
+      // set it to your public domain(s) before exposing the server.
+      enableDnsRebindingProtection: config.allowedHosts.length > 0,
+      allowedHosts:
+        config.allowedHosts.length > 0 ? config.allowedHosts : undefined,
     });
     res.on("close", () => {
       void transport.close();

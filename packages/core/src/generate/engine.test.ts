@@ -39,6 +39,11 @@ describe("generateProject (petstore, recorded LLM fixtures)", () => {
       "package.json",
       "tsconfig.json",
       "Dockerfile",
+      ".dockerignore",
+      "docker-compose.yml",
+      "fly.toml",
+      "render.yaml",
+      "railway.json",
       ".gitignore",
       ".env.example",
       "README.md",
@@ -116,6 +121,59 @@ describe("generateProject (petstore, recorded LLM fixtures)", () => {
     // Copy-paste run + deploy instructions are present.
     expect(readme).toContain("npm run build");
     expect(readme).toContain("docker build -t");
+  });
+
+  it("emits deploy targets with a /healthz check and host hardening", async () => {
+    const result = await petstore();
+    const project = await generateProject(result, {
+      client: new ScriptedLlmClient(llmFixtureDir),
+      transport: "http",
+      auth: "oauth",
+    });
+
+    // Health check + DNS-rebinding + CORS land in the server entry.
+    const server = project.files.get("src/server.ts")!;
+    expect(server).toContain('app.get("/healthz"');
+    expect(server).toContain("enableDnsRebindingProtection");
+    expect(server).toContain("Access-Control-Allow-Origin");
+    // OAuth auth → resource-server discovery is scaffolded.
+    expect(server).toContain("/.well-known/oauth-protected-resource");
+
+    // Each host target points at /healthz and builds the Dockerfile.
+    const compose = project.files.get("docker-compose.yml")!;
+    expect(compose).toContain("MCPGEN_TRANSPORT: http");
+    expect(compose).toContain("/healthz");
+    const fly = project.files.get("fly.toml")!;
+    expect(fly).toContain('path = "/healthz"');
+    expect(fly).toContain('dockerfile = "Dockerfile"');
+    const render = project.files.get("render.yaml")!;
+    expect(render).toContain("healthCheckPath: /healthz");
+    expect(render).toContain("MCPGEN_BEARER_TOKEN"); // secret env, sync:false
+    expect(render).toContain("sync: false");
+    const railway = project.files.get("railway.json")!;
+    expect(railway).toContain('"healthcheckPath": "/healthz"');
+
+    // The Dockerfile declares a HEALTHCHECK; README documents the targets.
+    expect(project.files.get("Dockerfile")!).toContain("HEALTHCHECK");
+    const readme = project.files.get("README.md")!;
+    expect(readme).toContain("## Deploy");
+    expect(readme).toContain("fly deploy");
+    expect(readme).toContain("docker compose up");
+    expect(readme).toContain("Blueprint");
+    expect(readme).toContain("DNS-rebinding");
+  });
+
+  it("omits OAuth discovery when auth is none", async () => {
+    const result = await petstore();
+    const project = await generateProject(result, {
+      client: new ScriptedLlmClient(llmFixtureDir),
+      transport: "http",
+      auth: "none",
+    });
+    const server = project.files.get("src/server.ts")!;
+    expect(server).not.toContain("/.well-known/oauth-protected-resource");
+    // Health check is always present for the http transport.
+    expect(server).toContain('app.get("/healthz"');
   });
 
   it("emits an http URL config in the README for the http transport", async () => {

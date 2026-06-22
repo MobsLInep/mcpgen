@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildProgram } from "./program";
 
-describe("@mcpgen/cli", () => {
+describe("mcpgen CLI", () => {
   it("builds a program named mcpgen", () => {
     const program = buildProgram();
     expect(program.name()).toBe("mcpgen");

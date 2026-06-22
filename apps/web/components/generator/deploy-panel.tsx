@@ -6,31 +6,32 @@ import { Badge } from "@/components/ui/badge";
 const TARGETS = [
   {
     icon: Container,
-    name: "Docker",
-    blurb: "A hardened multi-stage image, ready for any container host.",
-  },
-  {
-    icon: Cloud,
-    name: "Cloudflare Workers",
-    blurb: "Deploy the Streamable-HTTP transport to the edge in one command.",
+    name: "Docker / Compose",
+    blurb:
+      "A hardened multi-stage image with a /healthz check, plus a docker-compose.yml.",
   },
   {
     icon: Server,
-    name: "Fly.io / Render",
-    blurb: "Push the generated server to a managed Node host.",
+    name: "Fly.io",
+    blurb: "fly.toml with the build, env, and health check wired — fly deploy.",
+  },
+  {
+    icon: Cloud,
+    name: "Render / Railway",
+    blurb: "render.yaml Blueprint + railway.json, both probing /healthz.",
   },
 ];
 
 /**
- * Deploy targets land in Phase 6. This panel previews them so the result page
- * tells the whole story; the buttons are intentionally disabled for now.
+ * Phase 6 ships deploy targets inside every generated project. This panel
+ * advertises what's in the download so the result page tells the whole story.
  */
 export function DeployPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <p className="eyebrow">Deploy</p>
-        <Badge variant="violet">coming in Phase 6</Badge>
+        <Badge variant="violet">in the download</Badge>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {TARGETS.map((t) => (
@@ -47,8 +48,9 @@ export function DeployPanel() {
         ))}
       </div>
       <p className="text-xs text-[var(--color-faint)]">
-        For now, download the project and run it locally — the README includes
-        copy-paste deploy instructions.
+        Every generated project includes a Dockerfile, docker-compose.yml, and
+        Fly/Render/Railway configs — the README has copy-paste deploy steps for
+        each, plus TLS / CORS / DNS-rebinding hardening notes.
       </p>
     </div>
   );

@@ -14,5 +14,10 @@ RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
 # Default to the Streamable HTTP transport in containers.
 ENV MCPGEN_TRANSPORT=http
+ENV MCPGEN_HTTP_PORT=3000
 EXPOSE 3000
+# Liveness probe for orchestrators that honor HEALTHCHECK (Docker, Compose).
+# Hosts like Fly/Render/Railway use the /healthz path from their own config.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://localhost:'+(process.env.MCPGEN_HTTP_PORT||3000)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "dist/server.js"]

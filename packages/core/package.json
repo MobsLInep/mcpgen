@@ -1,9 +1,14 @@
 {
   "name": "@mcpgen/core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "mcpgen generation engine (pure library).",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MobsLInep/mcpgen.git",
+    "directory": "packages/core"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,6 +20,13 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

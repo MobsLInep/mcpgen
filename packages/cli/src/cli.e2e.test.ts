@@ -45,7 +45,7 @@ describe("mcpgen CLI (built binary)", () => {
     // Build the CLI and its workspace deps (core, templates) via Turbo.
     execFileSync(
       "pnpm",
-      ["exec", "turbo", "run", "build", "--filter=@mcpgen/cli"],
+      ["exec", "turbo", "run", "build", "--filter=mcpgen"],
       {
         cwd: repoRoot,
         stdio: "ignore",

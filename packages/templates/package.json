@@ -1,9 +1,14 @@
 {
   "name": "@mcpgen/templates",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "MCP server code templates rendered by the mcpgen engine.",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MobsLInep/mcpgen.git",
+    "directory": "packages/templates"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -16,6 +21,13 @@
     "dist",
     "files"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

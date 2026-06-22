@@ -1,0 +1,11 @@
+# Keep the Docker build context lean and let the image install/build fresh.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/test-results
+**/playwright-report
+.git
+.github
+*.log

@@ -1,0 +1,49 @@
+# One-command local bring-up for the mcpgen web UI + API.
+#
+#   docker compose up --build
+#
+# Then open http://localhost:3000 — the generator talks to the API on :3001.
+# By default the API uses the deterministic FAKE runner so the stack works with
+# no Anthropic key. For real generation:
+#
+#   MCPGEN_FAKE=0 ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+name: mcpgen
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: mcpgen-api
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      MCPGEN_FAKE: ${MCPGEN_FAKE:-1}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Baked into the browser bundle — must be reachable from the user's
+        # browser, i.e. the host-published API port.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    image: mcpgen-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

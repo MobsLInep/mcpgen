@@ -1,20 +1,47 @@
 {
-  "name": "@mcpgen/cli",
-  "version": "0.0.0",
-  "private": true,
-  "description": "The mcpgen command-line interface.",
+  "name": "mcpgen",
+  "version": "0.1.0",
+  "description": "Generate a working, typed, deployable MCP server from an OpenAPI spec, GraphQL schema, or code repo.",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/MobsLInep/mcpgen#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MobsLInep/mcpgen.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/MobsLInep/mcpgen/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "openapi",
+    "graphql",
+    "code-generation",
+    "ai",
+    "cli"
+  ],
   "bin": {
     "mcpgen": "./dist/index.js"
   },
   "main": "./dist/program.js",
   "types": "./dist/program.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "tsc -p tsconfig.json",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
