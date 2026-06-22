@@ -90,7 +90,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   best-effort + low-confidence). CLI: `mcpgen inspect <source>` prints a
   tool-candidate table. IR lives in `packages/core/src/ir.ts`; fixtures in
   `packages/core/test/fixtures`.
-- **Phase 2 — Generation engine + `generate` (current).** The LLM-powered
+- **Phase 2 — Generation engine + `generate` (done).** The LLM-powered
   engine in `packages/core/src/generate/` turns the IR into a complete, typed
   MCP server (MCP SDK v1.x, Zod, stdio + Streamable HTTP). The Anthropic API
   sits behind the `LlmClient` interface (`llm.ts`; key/model from env, never
@@ -108,9 +108,32 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   [--auth apikey|oauth|none] [--offline] [--model <id>]`. Tests replay one
   recorded LLM run from `packages/core/test/fixtures/llm/` via
   `ScriptedLlmClient`, so CI needs no API key.
-- **Phase 3 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
+- **Phase 3 — Verification & self-repair (current).** A loop in
+  `packages/core/src/verify/` that *proves a generated server runs* instead of
+  just producing it. After generation it materializes the project into a temp
+  dir and runs four stages: **install** deps, **build** (the project's own
+  `tsc`), **boot** (spawn the stdio server and drive it with a real MCP client —
+  `initialize` + `tools/list`, asserting the advertised tools match the plan),
+  and **smoke** (call every tool with an IR-sampled input against a mocked
+  upstream, asserting a well-formed MCP result). On the first failing stage it
+  sends the error + the single offending file to Claude for a focused fix
+  (`repair.ts`), applies the patch, and re-runs — up to `--max-repairs` (default
+  3); on exhaustion it writes `VERIFICATION_REPORT.md` and exits non-zero. The
+  mock-upstream layer is pluggable (`MockUpstreamFactory`; default derives canned
+  responses from the IR output schemas) so verification never hits a real API,
+  and the whole I/O boundary (install/build/run) sits behind a `Toolchain`
+  interface — the real `NodeToolchain` shells out; tests inject a fake, mirroring
+  how the model sits behind `LlmClient`. The MCP *client* runs inside a driver
+  script written into the project under test, using the SDK the project itself
+  installed, so no MCP SDK dependency leaks into `core`. CLI: `mcpgen generate`
+  gains `--verify` (default on; `--no-verify` to skip) and `--max-repairs <n>`,
+  and streams per-stage status. Loop tests (`verify.test.ts`) cover a clean pass,
+  a build failure that gets repaired, and a budget exhaustion, all offline via
+  the fake toolchain + `MockLlmClient`; the real toolchain is exercised by
+  running `generate --verify` on the petstore fixture (needs a network install).
+- **Phase 4 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
   generate-and-download flow.
-- **Phase 4 — Deploy targets.** One-command deploy of generated servers.
+- **Phase 5 — Deploy targets.** One-command deploy of generated servers.
 
 > When starting a new phase, update this section and the locked-stack table if a
 > decision genuinely changes — don't let the docs drift from the code.

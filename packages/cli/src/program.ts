@@ -55,6 +55,15 @@ export function buildProgram(): Command {
     .option("--auth <mode>", "Auth handling: apikey, oauth, or none")
     .option("--model <id>", "Claude model id (overrides MCPGEN_MODEL)")
     .option("--offline", "Skip the LLM; deterministic generation only")
+    .option(
+      "--no-verify",
+      "Skip the post-generation verification & self-repair loop",
+    )
+    .option(
+      "--max-repairs <n>",
+      "Max self-repair iterations during verification",
+      "3",
+    )
     .description("Generate a typed, deployable MCP server from a source")
     .action(
       async (
@@ -65,6 +74,8 @@ export function buildProgram(): Command {
           auth?: string;
           model?: string;
           offline?: boolean;
+          verify: boolean;
+          maxRepairs: string;
         },
       ) => {
         try {
@@ -78,14 +89,23 @@ export function buildProgram(): Command {
               `invalid --auth "${options.auth}" (expected apikey, oauth, or none)`,
             );
           }
-          const out = await runGenerate(source, {
+          const maxRepairs = Number.parseInt(options.maxRepairs, 10);
+          if (!Number.isInteger(maxRepairs) || maxRepairs < 0) {
+            throw new Error(
+              `invalid --max-repairs "${options.maxRepairs}" (expected a non-negative integer)`,
+            );
+          }
+          const { output, ok } = await runGenerate(source, {
             out: options.out,
             transport: options.transport as "http" | "stdio",
             auth: options.auth as AuthMode | undefined,
             model: options.model,
             offline: options.offline,
+            verify: options.verify,
+            maxRepairs,
           });
-          process.stdout.write(`${out}\n`);
+          process.stdout.write(`${output}\n`);
+          if (!ok) process.exitCode = 1;
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           process.stderr.write(`mcpgen generate: ${message}\n`);
