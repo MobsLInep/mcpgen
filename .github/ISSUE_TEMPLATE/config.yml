@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions & discussion
+    url: https://github.com/MobsLInep/mcpgen/discussions
+    about: Ask questions, share what you built, or discuss ideas before filing an issue.
+  - name: 📚 Documentation
+    url: https://github.com/MobsLInep/mcpgen/tree/main/apps/docs/content
+    about: Quickstart, concepts, guides, and the architecture overview.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/MobsLInep/mcpgen/blob/main/SECURITY.md
+    about: Please follow responsible disclosure — do not open a public issue.

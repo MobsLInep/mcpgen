@@ -1,0 +1,69 @@
+---
+title: Adding auth
+---
+
+import { Callout } from "nextra/components";
+
+# Adding auth
+
+There are two distinct auth concerns, and mcpgen keeps them separate:
+
+1. **Upstream auth** — how the generated server authenticates to _your_ API.
+2. **Client/transport auth** — how an MCP client authenticates to the generated
+   server (only relevant for remote HTTP deployments).
+
+## Upstream auth
+
+mcpgen derives upstream auth from the source's security schemes, or you can force
+a mode:
+
+```bash
+npx mcpgen generate ./openapi.yaml --out ./my-server --auth apikey
+npx mcpgen generate ./openapi.yaml --out ./my-server --auth oauth
+npx mcpgen generate ./openapi.yaml --out ./my-server --auth none
+```
+
+Credentials are **always read from environment variables** — never written into
+the generated code. The emitted `.env.example` lists exactly what the server
+reads. Typical variables:
+
+| Mode             | Env vars (typical)    | Sent as                            |
+| ---------------- | --------------------- | ---------------------------------- |
+| `apikey`         | `MCPGEN_API_KEY`      | the header/query the spec declares |
+| `oauth` / bearer | `MCPGEN_BEARER_TOKEN` | `Authorization: Bearer …`          |
+| `none`           | —                     | no credentials attached            |
+
+```bash
+cp .env.example .env
+# edit:
+#   MCPGEN_API_BASE_URL=https://api.example.com
+#   MCPGEN_API_KEY=...        (or MCPGEN_BEARER_TOKEN=...)
+```
+
+<Callout type="info">
+  The single `http.ts` request builder attaches credentials and builds every URL
+  safely — there's no raw string interpolation of inputs into URLs or headers.
+</Callout>
+
+## Client auth (remote HTTP)
+
+When the source carries OAuth/bearer auth and you deploy over HTTP, the server
+also exposes **OAuth 2.1 protected-resource discovery**
+(`/.well-known/oauth-protected-resource`, RFC 9728) so MCP clients can find your
+authorization server. Point it at your deployment:
+
+```bash
+MCPGEN_OAUTH_RESOURCE=https://my-server.example.com
+MCPGEN_OAUTH_AUTH_SERVER=https://auth.example.com
+```
+
+<Callout type="warning">
+  Always run remote servers behind TLS so tokens never travel in cleartext, and
+  set `MCPGEN_ALLOWED_HOSTS` / `MCPGEN_CORS_ORIGIN`. See
+  [Deploying](/guides/deploying) for the full hardening checklist.
+</Callout>
+
+## Next
+
+- [Deploying](/guides/deploying)
+- [Connect to a client](/connect)

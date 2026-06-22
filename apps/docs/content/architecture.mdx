@@ -1,0 +1,86 @@
+---
+title: Architecture
+---
+
+import { Callout } from "nextra/components";
+
+# Architecture
+
+mcpgen is a **pnpm + Turborepo monorepo**. The generation logic lives in one pure
+library; every front end (CLI, API, web) is a thin shell over it.
+
+```text
+                 ┌──────────────┐
+  OpenAPI /      │ packages/cli │  mcpgen <command>   (commander)
+  GraphQL /  ──► │   (thin)     │
+  repo           └──────┬───────┘
+                        │ calls
+                 ┌──────▼────────────┐      renders   ┌────────────────────┐
+                 │  packages/core    │ ─────────────► │ packages/templates │
+                 │ generation engine │                │  MCP server code   │
+                 │  (pure library)   │                │     templates      │
+                 └──────┬────────────┘                └────────────────────┘
+                        │ also called by
+                 ┌──────▼───────┐   HTTP   ┌──────────────┐
+                 │  apps/api    │ ◄─────── │   apps/web   │  Next.js 15 UI
+                 │ (thin server)│          │ (App Router) │
+                 └──────────────┘          └──────────────┘
+```
+
+## Packages and apps
+
+| Path                     | Role                                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`packages/core`**      | The generation engine. A **pure library** — no web framework, no server, no heavy `fs` coupling. Parsing, planning, synthesis, assembly, verification, security audit, and observability all live here so they're reusable and testable. |
+| **`packages/cli`**       | The `mcpgen` command (commander). Stays **thin**: parse args, call `core`, write files. Prompts via `@clack/prompts`, color via `picocolors`.                                                                                            |
+| **`packages/templates`** | Source templates for the generated MCP server. `core` renders these; generated-code concerns stay out of `core`'s logic.                                                                                                                 |
+| **`apps/api`**           | A standalone `node:http` service (no framework) the web UI calls; delegates to `core`.                                                                                                                                                   |
+| **`apps/web`**           | Next.js 15 / React 19 App Router UI. Talks to `apps/api` over HTTP only.                                                                                                                                                                 |
+| **`apps/docs`**          | This site (Nextra 4).                                                                                                                                                                                                                    |
+
+## Dependency rules
+
+These keep the engine reusable and the layers honest:
+
+- `core` depends on **nothing else in the repo** — it's the leaf (it only reaches
+  into `templates` to render).
+- `cli` and `api` depend on `core`.
+- `web` talks to `api` **over HTTP** — it never imports `core`/`api` internals.
+
+<Callout type="info">
+  The rule of thumb: if you reach for `next`, `http`, or server-heavy `fs` code
+  inside `core`, it belongs in `cli`/`api` instead. Keeping `core` pure is what
+  lets the CLI, the API, and the test suite all drive the exact same engine.
+</Callout>
+
+## The pipeline
+
+The engine is a pipeline from input to verified server — see [Concepts](/concepts)
+for the detail:
+
+```text
+source ─▶ parse (deterministic) ─▶ IR ─▶ plan ─▶ synthesize ─▶ assemble ─▶ verify
+```
+
+Two interfaces make the whole thing testable offline:
+
+- **`LlmClient`** — the Anthropic API sits behind it; tests inject a scripted
+  client, so CI needs no API key.
+- **`Toolchain`** — install/build/run sit behind it; the real one shells out,
+  tests inject a fake.
+
+## Stack
+
+| Concern                 | Choice                                                |
+| ----------------------- | ----------------------------------------------------- |
+| Package manager / tasks | pnpm workspaces · Turborepo                           |
+| Language                | TypeScript (strict, ESM, NodeNext)                    |
+| CLI                     | commander · @clack/prompts · picocolors               |
+| Web                     | Next.js 15 · React 19 · Tailwind v4                   |
+| API                     | standalone `node:http`                                |
+| Generated server        | MCP SDK v1.x · Zod · stdio + Streamable HTTP          |
+| Tests                   | Vitest · fast-check · Playwright                      |
+| Security                | secure-MCP audit · CodeQL · Dependabot · `pnpm audit` |
+
+See [`CLAUDE.md`](https://github.com/MobsLInep/mcpgen/blob/main/CLAUDE.md) in the
+repo for the full, phase-by-phase architecture record.

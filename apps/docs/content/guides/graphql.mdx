@@ -1,0 +1,59 @@
+---
+title: From a GraphQL schema
+---
+
+import { Callout } from "nextra/components";
+
+# Generate from a GraphQL schema
+
+mcpgen reads a GraphQL schema and turns each **root query and mutation field**
+into an MCP tool. Field arguments become tool inputs; the GraphQL type maps to
+JSON Schema.
+
+## Supported
+
+- **SDL** (`.graphql` / `.gql`) — a schema definition document.
+- **Introspection JSON** — the result of an introspection query.
+- Parsed with the reference `graphql` package; no network calls during parse.
+
+## Generate
+
+```bash
+npx mcpgen generate ./schema.graphql --out ./my-server
+```
+
+```bash
+npx mcpgen inspect ./schema.graphql
+```
+
+## How fields map to tools
+
+| GraphQL                | IR / generated tool                             |
+| ---------------------- | ----------------------------------------------- |
+| `Query.<field>`        | a tool with `operation: query`, root `field`    |
+| `Mutation.<field>`     | a tool with `operation: mutation`, root `field` |
+| field arguments        | tool input fields (`location: arg`)             |
+| argument / field types | JSON Schema on the input/output                 |
+| field description      | the tool description                            |
+
+The generated server builds and issues the GraphQL operation for you against the
+upstream endpoint (`MCPGEN_API_BASE_URL`), selecting the requested root field.
+
+<Callout type="warning">
+  Subscriptions are not generated — MCP tools are request/response, so only
+  `Query` and `Mutation` roots become tools.
+</Callout>
+
+## Tips
+
+- **Endpoint** — set `MCPGEN_API_BASE_URL` to your GraphQL HTTP endpoint
+  (e.g. `https://api.example.com/graphql`).
+- **Auth** — most GraphQL APIs use a bearer token; see [Adding auth](/guides/auth).
+- **Selection sets** — generated handlers request the fields described by the
+  schema's output type; trim or extend them in the generated handler if you need
+  a narrower selection.
+
+## Next
+
+- [Choosing a transport](/guides/transport)
+- [Adding auth](/guides/auth)

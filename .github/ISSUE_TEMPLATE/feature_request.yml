@@ -1,0 +1,49 @@
+name: 💡 Feature request
+description: Suggest an idea or improvement.
+title: "feat: <short description>"
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the idea! Tell us what you'd like and why.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that's hard or impossible today?
+      placeholder: I'm generating from <X> and I want to ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should mcpgen do? A CLI flag, a new input kind, an output target…
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - New input kind (parser)
+        - New output target (e.g. Python/FastMCP)
+        - CLI / DX
+        - Generation engine
+        - Verification
+        - Web UI / API
+        - Deploy targets
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to open a PR for this.

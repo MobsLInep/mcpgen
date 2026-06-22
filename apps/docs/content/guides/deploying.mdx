@@ -1,0 +1,91 @@
+---
+title: Deploying
+---
+
+import { Tabs, Callout } from "nextra/components";
+
+# Deploying a generated server
+
+Every project mcpgen emits is **deploy-ready out of the box**. Alongside the
+source it writes a full deploy kit:
+
+| File                 | Purpose                                                         |
+| -------------------- | --------------------------------------------------------------- |
+| `Dockerfile`         | Hardened multi-stage build, with a `HEALTHCHECK` on `/healthz`. |
+| `.dockerignore`      | Keeps the build context (and image) small.                      |
+| `docker-compose.yml` | Local Compose service over the HTTP transport.                  |
+| `fly.toml`           | Fly.io app config (build, env, `/healthz` check).               |
+| `render.yaml`        | Render Blueprint (Docker build, health check, secret env vars). |
+| `railway.json`       | Railway config (Dockerfile build, `/healthz` check).            |
+| `.env.example`       | Every env var the server reads, documented.                     |
+
+The server speaks **Streamable HTTP** at `/mcp` and answers a liveness probe at
+`/healthz` (`{"status":"ok",...}`).
+
+## Deploy targets
+
+<Tabs items={["Docker / Compose", "Fly.io", "Render", "Railway"]}>
+  <Tabs.Tab>
+
+```bash
+docker build -t my-server .
+docker run -p 3000:3000 --env-file .env my-server
+# or:
+docker compose up --build
+curl http://localhost:3000/healthz
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+```bash
+fly launch --copy-config --no-deploy   # pick an app name + region
+fly secrets set MCPGEN_API_BASE_URL=https://api.example.com MCPGEN_BEARER_TOKEN=...
+fly deploy
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+Push the repo to GitHub, then **New + → Blueprint** and select it. `render.yaml`
+wires the Docker build, the `/healthz` check, and the env vars (secrets entered
+in the dashboard, marked `sync: false`).
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+```bash
+railway up   # uses railway.json
+```
+
+Set `MCPGEN_API_BASE_URL` and credentials in the Railway dashboard.
+
+  </Tabs.Tab>
+</Tabs>
+
+## Production hardening
+
+The generated server follows the MCP SDK's guidance for remote transports:
+
+- **TLS** — terminate HTTPS at the platform edge (Fly/Render/Railway do this for
+  you). Tokens then never travel in cleartext.
+- **DNS-rebinding protection** — set `MCPGEN_ALLOWED_HOSTS` to your public
+  domain(s). The Streamable HTTP transport rejects requests whose `Host` header
+  isn't in the allow-list.
+- **CORS** — set `MCPGEN_CORS_ORIGIN` to your client's origin instead of `*`.
+- **OAuth 2.1** — when the source uses OAuth/bearer auth, the server serves
+  `/.well-known/oauth-protected-resource` (RFC 9728). Point
+  `MCPGEN_OAUTH_RESOURCE` and `MCPGEN_OAUTH_AUTH_SERVER` at your deployment.
+
+<Callout type="info">
+  Want to smoke-test the image before shipping? The repo's opt-in `docker-smoke`
+  test (`MCPGEN_DOCKER_SMOKE=1`) actually `docker build`s a generated server and
+  polls `/healthz`.
+</Callout>
+
+## Deploying mcpgen itself
+
+The CLI publishes to npm as the unscoped **`mcpgen`** package (so `npx mcpgen`
+works with no install), and the web UI + API ship as Docker images. The full
+guide lives in the repo at
+[`docs/deployment.md`](https://github.com/MobsLInep/mcpgen/blob/main/docs/deployment.md).

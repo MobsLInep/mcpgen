@@ -1,0 +1,72 @@
+name: 🐛 Bug report
+description: Something isn't working as expected.
+title: "bug: <short description>"
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug! Please fill out the sections
+        below so we can reproduce it quickly.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including any error output.
+      placeholder: When I run `mcpgen generate ...`, I get ...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The exact command(s) and, if possible, a minimal source spec.
+      placeholder: |
+        1. `npx mcpgen generate ./openapi.yaml --out ./out`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - CLI (mcpgen command)
+        - Generation engine (core)
+        - Verification / self-repair
+        - Generated server (output)
+        - Web UI / API
+        - Docs
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: mcpgen version
+      description: Output of `npx mcpgen --version` (or the commit SHA).
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Node version (`node -v`), OS, and whether an `ANTHROPIC_API_KEY` was set.
+      placeholder: |
+        - Node: v20.x
+        - OS: macOS 14 / Ubuntu 24.04 / Windows 11
+        - API key set: yes / no (offline mode)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / VERIFICATION_REPORT.md
+      description: Paste relevant output. Re-run with `MCPGEN_LOG_LEVEL=debug` for more detail.
+      render: shell

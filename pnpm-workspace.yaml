@@ -10,3 +10,12 @@ onlyBuiltDependencies:
 allowBuilds:
   esbuild: true
   sharp: true
+
+# Nextra 4.6's docs theme strips `children` before validating its Layout props
+# against a schema that still requires it; zod >= 4.4 rejects the missing key
+# (older zod treated a missing `z.custom` key as present). Pin zod *only* under
+# the Nextra subtree to 4.3.x so the docs site builds. packages/core + apps/api
+# keep zod 4.4.x (what the Anthropic SDK is built against).
+overrides:
+  nextra>zod: "4.3.5"
+  nextra-theme-docs>zod: "4.3.5"

@@ -1,0 +1,109 @@
+---
+title: Concepts
+---
+
+import { Callout } from "nextra/components";
+
+# Concepts
+
+mcpgen is a pipeline. An input goes in; a verified MCP server comes out. Three
+ideas carry the whole thing: the **IR**, **generation**, and **verification**.
+
+```text
+ source ──▶ parse ──▶  IR  ──▶ generate ──▶ project ──▶ verify ──▶ ✅ server
+(openapi/                (tools +            (typed MCP    (install·build·
+ graphql/                 metadata)           server code)  boot·smoke + repair)
+ repo)
+```
+
+## The IR (intermediate representation)
+
+Parsing is **deterministic and LLM-free**. Each of the three parsers normalizes
+its very different input into one shared shape, defined in
+[`packages/core/src/ir.ts`](https://github.com/MobsLInep/mcpgen/blob/main/packages/core/src/ir.ts):
+a `SourceMetadata` header plus a list of `ToolCandidate`s.
+
+A `ToolCandidate` is everything downstream needs to emit a real tool, with **no
+I/O of its own**:
+
+- a sanitized, **MCP-safe unique name** (`[A-Za-z0-9_-]`);
+- a `description` shown to the agent;
+- an `OperationBinding` — how to invoke the source: `http` (method + path
+  template) or `graphql` (query/mutation + root field);
+- flattened `parameters`, each with a `location` (`path` / `query` / `header` /
+  `cookie` / `body` / `arg`), `required` flag, and a JSON Schema;
+- an `inputSchema` (and optional `outputSchema`);
+- `auth` requirements (modeled on OpenAPI security schemes);
+- a `confidence` score in `[0, 1]`; and
+- `provenance` — a human-readable pointer back to the origin (`GET /pets`,
+  `Query.listPets`, `src/routes/users.ts:42`).
+
+<Callout type="info">
+  Why an IR? It's the single contract between *ingestion* and *generation*.
+  Adding a new input kind means writing one parser to the IR; adding a new
+  output means consuming the IR. The two never need to know about each other.
+</Callout>
+
+Structured sources (OpenAPI, GraphQL) score high confidence; the code parser's
+static guesses score lower and are flagged. `mcpgen inspect <source>` prints the
+IR as a table (or `--json`).
+
+## Generation
+
+The engine in `packages/core/src/generate/` turns the IR into a complete, typed
+MCP server (MCP SDK v1.x, Zod, stdio + Streamable HTTP) in three stages:
+
+1. **Plan** (`plan.ts`) — Claude proposes the tool set as strict JSON, validated
+   with Zod and given one corrective retry on malformed output.
+2. **Synthesize** (`synthesize.ts`) — per tool, a Zod input shape and a handler
+   body. A deterministic, **IR-only fallback** means a tool always generates,
+   even if a model call fails.
+3. **Assemble** (`assemble.ts`) — render real template files from
+   `packages/templates/files/*.tmpl` into a `path → contents` project map.
+
+The Anthropic API sits behind an `LlmClient` interface — the key and model come
+from the environment and are **never hardcoded**. Responses are
+content-addressed and cached, so re-runs are cheap and resumable.
+
+### Offline mode
+
+With no `ANTHROPIC_API_KEY` (or `--offline`), the engine skips every model call
+and uses the deterministic fallback throughout. You still get a complete,
+buildable server — just with plainer descriptions and handler bodies derived
+straight from the IR.
+
+### Security baked in
+
+Generated code follows OWASP secure-MCP practice: every input is Zod-validated
+at runtime, all upstream URLs are built in one safe `http.ts` (no raw string
+interpolation), credentials come from env vars, and a `SECURITY.md` ships in the
+output. The same rules are encoded as an automated audit — see
+[`security/audit.ts`](https://github.com/MobsLInep/mcpgen/blob/main/packages/core/src/security/audit.ts).
+
+## Verification & self-repair
+
+A generator you can't trust isn't worth much, so mcpgen **proves** each server
+runs instead of just producing it. The loop in `packages/core/src/verify/`
+materializes the project into a temp dir and runs four stages:
+
+1. **install** dependencies;
+2. **build** with the project's own `tsc`;
+3. **boot** — spawn the stdio server and drive it with a real MCP client
+   (`initialize` + `tools/list`), asserting the advertised tools match the plan;
+4. **smoke** — call every tool with an IR-sampled input against a **mocked
+   upstream**, asserting a well-formed MCP result.
+
+On the first failing stage, mcpgen sends the error plus the single offending file
+to Claude for a focused fix (`repair.ts`), applies the patch, and re-runs — up to
+`--max-repairs` (default 3). If the budget is exhausted it writes a
+`VERIFICATION_REPORT.md` and exits non-zero.
+
+<Callout type="info">
+  Verification never touches a real API. The mock-upstream layer is pluggable
+  and derives canned responses from the IR output schemas, and the whole
+  install/build/run boundary sits behind a `Toolchain` interface (the real one
+  shells out; tests inject a fake).
+</Callout>
+
+This is why `mcpgen generate` verifies by default. Pass `--no-verify` to skip it
+(faster, but you own the risk).
