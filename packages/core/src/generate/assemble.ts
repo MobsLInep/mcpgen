@@ -187,6 +187,11 @@ export function assembleProject(
   const baseUrl = result.metadata.servers?.[0] ?? "";
   const schemes = deriveAuthSchemes(result, options.auth);
 
+  // The http transport gets remote-hardening scaffolding; OAuth discovery is
+  // emitted whenever the source carries a bearer/OAuth credential.
+  const wantsOAuth =
+    options.auth === "oauth" || schemes.some((s) => s.kind === "bearer");
+
   // --- Per-tool files + registry ---
   const importLines: string[] = [];
   const arrayLines: string[] = [];
@@ -232,6 +237,7 @@ export function assembleProject(
     renderTemplate("server.ts.tmpl", {
       SERVER_NAME: packageName,
       SERVER_VERSION: version,
+      WELL_KNOWN_SECTION: wellKnownSection(wantsOAuth),
     }),
   );
 
@@ -249,7 +255,26 @@ export function assembleProject(
   );
   files.set("tsconfig.json", renderTemplate("tsconfig.json.tmpl", {}));
   files.set("Dockerfile", renderTemplate("Dockerfile.tmpl", {}));
+  files.set(".dockerignore", renderTemplate("dockerignore.tmpl", {}));
   files.set(".gitignore", renderTemplate("gitignore.tmpl", {}));
+
+  // --- Deploy targets (Docker Compose + Fly / Render / Railway) ---
+  files.set(
+    "docker-compose.yml",
+    renderTemplate("docker-compose.yml.tmpl", { PACKAGE_NAME: packageName }),
+  );
+  files.set(
+    "fly.toml",
+    renderTemplate("fly.toml.tmpl", { PACKAGE_NAME: packageName }),
+  );
+  files.set(
+    "render.yaml",
+    renderTemplate("render.yaml.tmpl", {
+      PACKAGE_NAME: packageName,
+      RENDER_SECRET_ENV: renderSecretEnv(schemes),
+    }),
+  );
+  files.set("railway.json", renderTemplate("railway.json.tmpl", {}));
   files.set(
     ".env.example",
     renderTemplate("env.example.tmpl", {
@@ -269,6 +294,7 @@ export function assembleProject(
       API_BASE_URL: baseUrl,
       TOOL_LIST: toolListDoc(plan),
       CONNECT_SECTION: connectSectionDoc(packageName, options.transport, schemes),
+      DEPLOY_SECTION: deploySectionDoc(packageName, wantsOAuth),
     }),
   );
   files.set(
@@ -383,6 +409,104 @@ function connectSectionDoc(
       "",
       "Replace `<your-credential>` with a real value, or drop the `env` block and" +
         " supply credentials via `.env` / your shell instead.",
+    );
+  }
+  return lines.join("\n");
+}
+
+/**
+ * The `{{WELL_KNOWN_SECTION}}` for `server.ts`: an OAuth 2.1 protected-resource
+ * metadata route (RFC 9728) when the source carries OAuth/bearer auth, or a
+ * short placeholder comment otherwise. Indented two spaces to sit inside
+ * `runHttp()`.
+ */
+function wellKnownSection(wantsOAuth: boolean): string {
+  if (!wantsOAuth) {
+    return "  // (no OAuth resource-server discovery — this server uses non-OAuth auth)\n";
+  }
+  return [
+    "  // OAuth 2.1 protected-resource metadata (RFC 9728). MCP clients read this",
+    "  // to discover the authorization server. Set MCPGEN_OAUTH_RESOURCE and",
+    "  // MCPGEN_OAUTH_AUTH_SERVER to your deployment's URLs before production.",
+    '  app.get("/.well-known/oauth-protected-resource", (_req, res) => {',
+    "    res.json({",
+    "      resource: config.oauth.resource,",
+    "      authorization_servers: config.oauth.authorizationServer",
+    "        ? [config.oauth.authorizationServer]",
+    "        : [],",
+    '      bearer_methods_supported: ["header"],',
+    "      scopes_supported: config.oauth.scopes,",
+    "    });",
+    "  });",
+    "",
+  ].join("\n");
+}
+
+/** Render the `sync: false` env-var rows injected into `render.yaml`. */
+function renderSecretEnv(schemes: AuthScheme[]): string {
+  return schemes
+    .map((s) => `      - key: ${s.envVar}\n        sync: false`)
+    .join("\n");
+}
+
+/** Render the README `{{DEPLOY_SECTION}}` — Docker + one-click host targets. */
+function deploySectionDoc(packageName: string, wantsOAuth: boolean): string {
+  const lines = [
+    "## Deploy",
+    "",
+    "Every command below runs the **Streamable HTTP** transport; the server",
+    "answers MCP at `/mcp` and a health check at `/healthz`.",
+    "",
+    "### Docker (any host)",
+    "",
+    "```bash",
+    `docker build -t ${packageName} .`,
+    `docker run -p 3000:3000 --env-file .env ${packageName}`,
+    "# now: curl http://localhost:3000/healthz  →  {\"status\":\"ok\",...}",
+    "```",
+    "",
+    "### Docker Compose (local)",
+    "",
+    "```bash",
+    "docker compose up --build      # reads .env if present; Ctrl-C to stop",
+    "```",
+    "",
+    "### Fly.io",
+    "",
+    "```bash",
+    "fly launch --copy-config --no-deploy   # first time: pick app name + region",
+    "fly secrets set MCPGEN_API_BASE_URL=https://api.example.com",
+    "fly deploy                              # uses the generated fly.toml",
+    "```",
+    "",
+    "### Render",
+    "",
+    "Push this repo to GitHub, then in Render choose **New + → Blueprint** and",
+    "select it — `render.yaml` wires the Docker build, the `/healthz` check, and",
+    "the env vars (secrets are entered in the dashboard).",
+    "",
+    "### Railway",
+    "",
+    "```bash",
+    "railway up      # uses railway.json (Dockerfile build + /healthz check)",
+    "```",
+    "",
+    "Set `MCPGEN_API_BASE_URL` and any credentials in the Railway dashboard.",
+    "",
+    "### Going to production (remote transport)",
+    "",
+    "- **TLS** — terminate HTTPS at the platform edge (Fly/Render/Railway do this",
+    "  for you) so tokens never travel in cleartext.",
+    "- **DNS-rebinding protection** — set `MCPGEN_ALLOWED_HOSTS` to your public",
+    "  domain(s); the server then rejects requests with an unexpected `Host`.",
+    "- **CORS** — set `MCPGEN_CORS_ORIGIN` to your client's origin instead of `*`.",
+  ];
+  if (wantsOAuth) {
+    lines.push(
+      "- **OAuth 2.1** — this server serves",
+      "  `/.well-known/oauth-protected-resource`; point",
+      "  `MCPGEN_OAUTH_RESOURCE` / `MCPGEN_OAUTH_AUTH_SERVER` at your deployment",
+      "  and authorization server so MCP clients can discover how to authenticate.",
     );
   }
   return lines.join("\n");

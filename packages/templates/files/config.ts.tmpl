@@ -17,6 +17,16 @@ export interface AuthScheme {
   readonly envVar: string;
 }
 
+/** OAuth 2.1 resource-server discovery metadata (RFC 9728). */
+export interface OAuthConfig {
+  /** Canonical URL of this resource server (the deployed /mcp origin). */
+  readonly resource: string;
+  /** Authorization server clients should use to obtain tokens. */
+  readonly authorizationServer: string;
+  /** Scopes advertised in the protected-resource metadata. */
+  readonly scopes: string[];
+}
+
 export interface Config {
   /** Base URL of the upstream API. */
   readonly baseUrl: string;
@@ -26,6 +36,23 @@ export interface Config {
   readonly port: number;
   /** Credential schemes to apply to outbound requests. */
   readonly auth: AuthScheme[];
+  /**
+   * Host allow-list for DNS-rebinding protection on the http transport. Empty
+   * disables the check (fine for local dev; set it before exposing publicly).
+   */
+  readonly allowedHosts: string[];
+  /** CORS `Access-Control-Allow-Origin` value for the http transport. */
+  readonly corsOrigin: string;
+  /** OAuth 2.1 discovery metadata (used when the source requires OAuth). */
+  readonly oauth: OAuthConfig;
+}
+
+/** Split a comma/space separated env value into a trimmed, non-empty list. */
+function envList(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 /** Auth schemes derived from the source spec at generation time. */
@@ -46,10 +73,20 @@ export function loadConfig(): Config {
     );
   }
   const port = Number.parseInt(process.env.MCPGEN_HTTP_PORT ?? "3000", 10);
+  const resolvedPort = Number.isFinite(port) ? port : 3000;
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     transport: envTransport(),
-    port: Number.isFinite(port) ? port : 3000,
+    port: resolvedPort,
     auth: AUTH_SCHEMES,
+    allowedHosts: envList(process.env.MCPGEN_ALLOWED_HOSTS),
+    corsOrigin: process.env.MCPGEN_CORS_ORIGIN ?? "*",
+    oauth: {
+      resource:
+        process.env.MCPGEN_OAUTH_RESOURCE ??
+        `http://localhost:${resolvedPort}/mcp`,
+      authorizationServer: process.env.MCPGEN_OAUTH_AUTH_SERVER ?? "",
+      scopes: envList(process.env.MCPGEN_OAUTH_SCOPES),
+    },
   };
 }

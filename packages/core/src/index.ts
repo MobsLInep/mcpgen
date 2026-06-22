@@ -1,7 +1,7 @@
 import { templates, type TemplateDescriptor } from "@mcpgen/templates";
 
 /** Version of the generation engine. */
-export const CORE_VERSION = "0.0.0";
+export const CORE_VERSION = "0.1.0";
 
 /**
  * Phase 2: the engine ingests an OpenAPI spec, GraphQL schema, or code repo,

@@ -3,7 +3,7 @@ import { CORE_VERSION, describeEngine } from "./index";
 
 describe("@mcpgen/core", () => {
   it("exposes a version", () => {
-    expect(CORE_VERSION).toBe("0.0.0");
+    expect(CORE_VERSION).toBe("0.1.0");
   });
 
   it("describes the engine", () => {

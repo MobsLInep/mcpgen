@@ -66,7 +66,9 @@ These are intentional and should not be swapped without a deliberate decision:
 | Lint                 | **ESLint flat config** + typescript-eslint                                                                                             |
 | Format               | **Prettier**                                                                                                                           |
 | Tests                | **Vitest** (configured at the repo root)                                                                                               |
-| Node                 | **20+** (pinned via `.nvmrc` + `engines`)                                                                                              |
+| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                     |
+| Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                              |
+| Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgen`, web image to **GHCR** |
 
 Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
@@ -159,7 +161,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   `ui.test.ts`, expanded `program.test.ts`, and a hermetic child-process
   `cli.e2e.test.ts` that builds the binary via Turbo and drives the offline
   paths. A scripted demo lives in `docs/demo.md`.
-- **Phase 5 — Web UI + API (current).** The public, in-browser
+- **Phase 5 — Web UI + API (done).** The public, in-browser
   generate-and-download flow. **`apps/api`** is a standalone `node:http` service
   (no framework, matching the repo) exposing `POST /api/parse`, `POST /api/jobs`,
   `GET /api/jobs/:id` (+ `/events` SSE, `/files`, `/download` zip, `/config`),
@@ -191,7 +193,35 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   boots both servers with `MCPGEN_FAKE=1`). NOTE: the run-directly guard in
   `apps/api/src/index.ts` uses `pathToFileURL` (not naive `file://${argv[1]}`)
   because the repo path contains a space.
-- **Phase 6 — Deploy targets.** One-command deploy of generated servers.
+- **Phase 6 — Deploy targets (current).** Make both the generated servers and
+  mcpgen itself trivially deployable. **Generated servers:** assembly now emits a
+  full deploy kit alongside the source — a `.dockerignore`, a `docker-compose.yml`
+  (http transport + `/healthz` healthcheck), and `fly.toml` / `render.yaml` /
+  `railway.json` templates, all probing `/healthz`. The server entry
+  (`server.ts.tmpl`) gained a `/healthz` route, CORS middleware
+  (`MCPGEN_CORS_ORIGIN`), Streamable-HTTP **DNS-rebinding protection**
+  (`MCPGEN_ALLOWED_HOSTS` → `enableDnsRebindingProtection`/`allowedHosts`), and —
+  when the source carries OAuth/bearer auth — an OAuth 2.1 **protected-resource
+  discovery** route (`/.well-known/oauth-protected-resource`, RFC 9728) driven by
+  the new `{{WELL_KNOWN_SECTION}}` token + `config.oauth`. The `Dockerfile` gained
+  a `HEALTHCHECK`; the README gained a `{{DEPLOY_SECTION}}` with copy-paste
+  Docker/Compose/Fly/Render/Railway steps and TLS/CORS/DNS-rebinding/OAuth
+  hardening notes (all derived in `assemble.ts`). `engine.test.ts` asserts the
+  deploy files + health/OAuth wiring; `verify/docker-smoke.test.ts` (opt-in via
+  `MCPGEN_DOCKER_SMOKE=1`) actually `docker build`s a generated server and polls
+  `/healthz`. **mcpgen itself:** `packages/cli` now publishes as the **unscoped
+  `mcpgen`** package (so `npx mcpgen` works with no global install), with
+  `@mcpgen/core` + `@mcpgen/templates` made publishable too (all `publishConfig`
+  `access:public` + `provenance:true`, versioned `0.1.0`). `apps/web` builds to
+  Next **standalone** output (`next.config.mjs`) with `apps/web/Dockerfile`;
+  `apps/api` has `apps/api/Dockerfile`; the root **`docker-compose.yml`** brings
+  up web+api with one command (`docker compose up --build`), defaulting to the
+  fake runner so it boots with no Anthropic key. `.github/workflows/deploy.yml`
+  builds+pushes the web image to GHCR on `main` and publishes the CLI to npm with
+  provenance on a `v*` tag. Full guide in `docs/deployment.md`. NOTE: the
+  web/api Docker images use **`node:22-alpine`** (corepack's pnpm 11 needs a
+  newer Node builtin than Node 20 ships); the generated server's own Dockerfile
+  stays on `node:20-alpine` since it uses plain `npm`, not pnpm.
 
 > When starting a new phase, update this section and the locked-stack table if a
 > decision genuinely changes — don't let the docs drift from the code.
