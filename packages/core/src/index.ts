@@ -47,6 +47,21 @@ export type { CodeInput } from "./parsers/code.js";
 // Source detection.
 export { detectSource, UnknownSourceError } from "./detect.js";
 
+// Environment diagnostics (Phase 4 — `mcpgen doctor`).
+export {
+  runDoctor,
+  defaultDockerProbe,
+  ANTHROPIC_KEY_VARS,
+} from "./doctor.js";
+export type {
+  DoctorReport,
+  DoctorCheck,
+  DoctorStatus,
+  DoctorOptions,
+  DockerProbe,
+  DockerStatus,
+} from "./doctor.js";
+
 // Generation engine (Phase 2).
 export {
   generateProject,

@@ -112,14 +112,29 @@ function formatEvent(event: VerifyEvent): string | undefined {
   }
 }
 
+/** Machine-readable result of a generate run (drives --json and the panel). */
+export interface GenerateSummary {
+  serverName: string;
+  toolCount: number;
+  outDir: string;
+  note: string;
+  usedFallback: boolean;
+  transport: "stdio" | "http";
+  files: string[];
+  verification: { ok: boolean; passes: number; repairs: number } | "skipped";
+  /** Set when verification failed and a report was written. */
+  reportPath?: string;
+}
+
 /**
- * Run the generate command. Returns `{ output, ok }`; `ok` is false only when
- * verification ran and did not pass, so the caller can set a non-zero exit code.
+ * Run the generate command. Returns `{ output, ok, summary }`; `ok` is false
+ * only when verification ran and did not pass, so the caller can set a non-zero
+ * exit code. `summary` is structured for `--json` and the rendered panel.
  */
 export async function runGenerate(
   source: string,
   options: GenerateOptions,
-): Promise<{ output: string; ok: boolean }> {
+): Promise<{ output: string; ok: boolean; summary: GenerateSummary }> {
   const outDir = resolve(options.out);
   const log = options.log ?? ((line) => process.stderr.write(`${line}\n`));
   const parsed = await (await detectSource(resolve(source))).parse();
@@ -146,8 +161,20 @@ export async function runGenerate(
     );
   }
 
+  const transport = options.transport ?? "stdio";
+  const summary: GenerateSummary = {
+    serverName: project.serverName,
+    toolCount: project.toolCount,
+    outDir,
+    note,
+    usedFallback: project.usedFallback,
+    transport,
+    files: [...project.files.keys()].sort(),
+    verification: "skipped",
+  };
+
   if (!options.verify) {
-    return { output: lines.join("\n"), ok: true };
+    return { output: lines.join("\n"), ok: true, summary };
   }
 
   log("\nVerifying the generated server (install → build → boot → smoke):");
@@ -166,21 +193,32 @@ export async function runGenerate(
   }
 
   if (verification.ok) {
+    summary.verification = {
+      ok: true,
+      passes: verification.passes,
+      repairs: verification.repairsApplied,
+    };
     lines.push(
       "",
       `Verified: installed, built, booted, and smoke-called every tool` +
         ` (${verification.passes} pass(es), ${verification.repairsApplied} repair(s)).`,
     );
-    return { output: lines.join("\n"), ok: true };
+    return { output: lines.join("\n"), ok: true, summary };
   }
 
   // Failure: write the report next to the generated server.
   const reportPath = join(outDir, "VERIFICATION_REPORT.md");
   writeFileSync(reportPath, verification.report);
+  summary.verification = {
+    ok: false,
+    passes: verification.passes,
+    repairs: verification.repairsApplied,
+  };
+  summary.reportPath = reportPath;
   lines.push(
     "",
     `Verification FAILED after ${verification.passes} pass(es).`,
     `See ${reportPath} for the failing stage and full logs.`,
   );
-  return { output: lines.join("\n"), ok: false };
+  return { output: lines.join("\n"), ok: false, summary };
 }

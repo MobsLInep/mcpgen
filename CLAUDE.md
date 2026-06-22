@@ -58,6 +58,7 @@ These are intentional and should not be swapped without a deliberate decision:
 | Language             | **TypeScript**, `strict` mode, ESM                                  |
 | Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext** |
 | CLI framework        | **commander**                                                       |
+| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)      |
 | Web                  | **Next.js 15**, App Router, React 19                                |
 | Lint                 | **ESLint flat config** + typescript-eslint                          |
 | Format               | **Prettier**                                                        |
@@ -108,7 +109,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   [--auth apikey|oauth|none] [--offline] [--model <id>]`. Tests replay one
   recorded LLM run from `packages/core/test/fixtures/llm/` via
   `ScriptedLlmClient`, so CI needs no API key.
-- **Phase 3 — Verification & self-repair (current).** A loop in
+- **Phase 3 — Verification & self-repair (done).** A loop in
   `packages/core/src/verify/` that *proves a generated server runs* instead of
   just producing it. After generation it materializes the project into a temp
   dir and runs four stages: **install** deps, **build** (the project's own
@@ -131,9 +132,33 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   a build failure that gets repaired, and a budget exhaustion, all offline via
   the fake toolchain + `MockLlmClient`; the real toolchain is exercised by
   running `generate --verify` on the petstore fixture (needs a network install).
-- **Phase 4 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
+- **Phase 4 — CLI polish & DX (current).** Turn the CLI into a finished,
+  trustworthy front end while keeping all logic in `core`. New commands:
+  **`mcpgen init`** — a guided wizard (`packages/cli/src/init.ts`, built on
+  `@clack/prompts`) that prompts for source → transport → auth → output, then
+  runs generation with a live spinner and a final summary panel + copy-paste
+  next steps; **`mcpgen doctor`** — environment checks (Node version, Anthropic
+  key, Docker) whose logic lives in `packages/core/src/doctor.ts` as a pure
+  `runDoctor()` returning a structured `DoctorReport` (the Docker probe is
+  injectable, like `Toolchain`/`LlmClient`, so tests run offline); and
+  **`mcpgen completion <bash|zsh|fish>`** — static shell completion scripts.
+  `generate` and `doctor`/`inspect` gain `--json` for scripting, and all
+  commands print **friendly, actionable errors** (`packages/cli/src/ui.ts`
+  `friendlyError` maps core's typed errors + `ENOENT` to suggested fixes).
+  Presentation (color via `picocolors`, boxed panels, spinners) is isolated in
+  `ui.ts`; the command modules stay orchestration-only. The generated project's
+  `README.md` now ships copy-paste run/deploy instructions and a "connect to
+  Claude Desktop / Cursor / VS Code" section with exact MCP config JSON (the
+  config is derived in `assemble.ts` and rendered via the `{{CONNECT_SECTION}}`
+  token — `mcpServers` for Claude/Cursor, `servers` for VS Code, command/args
+  for stdio or a `type:http` URL for http). Tests: core `doctor.test.ts` +
+  README connect assertions in `engine.test.ts`; CLI `completion.test.ts`,
+  `ui.test.ts`, expanded `program.test.ts`, and a hermetic child-process
+  `cli.e2e.test.ts` that builds the binary via Turbo and drives the offline
+  paths. A scripted demo lives in `docs/demo.md`.
+- **Phase 5 — Web UI + API.** Wire `apps/web` to `apps/api` for an in-browser
   generate-and-download flow.
-- **Phase 5 — Deploy targets.** One-command deploy of generated servers.
+- **Phase 6 — Deploy targets.** One-command deploy of generated servers.
 
 > When starting a new phase, update this section and the locked-stack table if a
 > decision genuinely changes — don't let the docs drift from the code.
