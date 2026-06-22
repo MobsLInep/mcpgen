@@ -65,7 +65,8 @@ These are intentional and should not be swapped without a deliberate decision:
 | E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                    |
 | Lint                 | **ESLint flat config** + typescript-eslint                                                                                             |
 | Format               | **Prettier**                                                                                                                           |
-| Tests                | **Vitest** (configured at the repo root)                                                                                               |
+| Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                    |
+| Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                  |
 | Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                     |
 | Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                              |
 | Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgen`, web image to **GHCR** |
@@ -193,7 +194,7 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   boots both servers with `MCPGEN_FAKE=1`). NOTE: the run-directly guard in
   `apps/api/src/index.ts` uses `pathToFileURL` (not naive `file://${argv[1]}`)
   because the repo path contains a space.
-- **Phase 6 — Deploy targets (current).** Make both the generated servers and
+- **Phase 6 — Deploy targets (done).** Make both the generated servers and
   mcpgen itself trivially deployable. **Generated servers:** assembly now emits a
   full deploy kit alongside the source — a `.dockerignore`, a `docker-compose.yml`
   (http transport + `/healthz` healthcheck), and `fly.toml` / `render.yaml` /
@@ -223,6 +224,45 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   newer Node builtin than Node 20 ships); the generated server's own Dockerfile
   stays on `node:20-alpine` since it uses plain `npm`, not pnpm.
 
+- **Phase 7 — Testing & security hardening (current).** No new features — make
+  what exists bulletproof before launch. **Coverage:** Vitest now runs with
+  **`@vitest/coverage-v8`** (`pnpm test:coverage`) and enforces per-glob
+  thresholds in `vitest.config.ts` — the generation engine
+  (`packages/core/src/generate`) and verification loop
+  (`packages/core/src/verify`) must stay ≥85% statements / ≥80% branches (both
+  sit ~96%/~90% now). New `core` unit tests fill the gaps the engine had
+  (`cache`, `llm`, `zodgen`, `plan`, `synthesize`, `toolchain`, `repair`, plus
+  verify-loop branch tests). **Property tests** (`parsers/openapi.property.test.ts`,
+  **fast-check**) generate thousands of valid OpenAPI docs and assert parser
+  invariants (MCP-safe unique names, IR mirrors spec, required path params) and
+  that every generated server passes the security audit. **Golden suite**
+  (`generate/golden.test.ts`) generates servers for **6 real public OpenAPI
+  specs** committed under `packages/core/test/fixtures/golden/` (petstore,
+  petstore-expanded, uspto, api-with-examples, link-example, callback-example),
+  proves each emits syntactically-valid TS (via the `typescript` transpiler) and
+  passes the full verify loop under the mocked upstream — offline with a
+  files-reading fake toolchain by default, or the real `NodeToolchain` under
+  `MCPGEN_GOLDEN_REAL=1`. **Adversarial tests** (`generate/adversarial.test.ts`)
+  confirm malformed specs reject cleanly (no hang/crash) and injection-y
+  descriptions/param-names stay escaped (valid TS + clean audit; `{{TOKEN}}`s in
+  user content are not re-expanded), and a 400-operation spec generates fine.
+  **Secure-MCP audit** (`packages/core/src/security/audit.ts`, exported from
+  core) encodes the OWASP checklist as an automated lint over a `path→contents`
+  map: no-secret-in-logs, inputs-validated (Zod), no-shell-or-eval, no-raw-fetch,
+  scoped-credentials, dns-rebinding-guard, review-surface. Rules are scoped
+  (`generated` vs `any`) so the universal ones also lint mcpgen's own source.
+  `scripts/security-lint.mjs` (`pnpm security:lint`) runs it over a generated
+  project **and** over first-party source, exiting non-zero on any high finding.
+  **Observability** (`packages/core/src/observability.ts`): a structured logger
+  (`MCPGEN_LOG_LEVEL`, injectable sink) and **opt-in, PII-free telemetry**
+  (`MCPGEN_TELEMETRY=1`; `redactTelemetry` allow-lists numbers/booleans/safe
+  enums and drops paths/titles/keys), wired as no-op hooks in `generateProject`
+  and `verifyProject`. **CI:** `ci.yml` gained a `security` job
+  (`pnpm audit --prod --audit-level=high` + `pnpm security:lint`) and switched
+  tests to `test:coverage`; new `codeql.yml` (security-extended) and
+  `dependabot.yml` (npm + actions). **Docs:** root `SECURITY.md` (disclosure
+  policy) + `THREAT_MODEL.md` (STRIDE-framed, maps each control to code).
+
 > When starting a new phase, update this section and the locked-stack table if a
 > decision genuinely changes — don't let the docs drift from the code.
 
@@ -230,4 +270,11 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
 ```bash
 pnpm install && pnpm build && pnpm lint && pnpm typecheck && pnpm test
+```
+
+Phase 7 adds two more gates (also run in CI):
+
+```bash
+pnpm test:coverage   # enforces engine + verify coverage thresholds
+pnpm security:lint   # OWASP secure-MCP audit over generated output + own source (needs a prior build)
 ```

@@ -25,6 +25,7 @@ import type { ParseResult, ToolCandidate } from "../ir.js";
 import type { GeneratedProject } from "../generate/assemble.js";
 import type { LlmClient } from "../generate/llm.js";
 import type { Plan } from "../generate/plan.js";
+import { emitTelemetry } from "../observability.js";
 import { type MockUpstreamFactory, openApiExampleMock } from "./mock.js";
 import { type RepairRequest, type StageName, repairFile } from "./repair.js";
 import {
@@ -419,6 +420,14 @@ export async function verifyProject(
   }
 
   emit({ type: "done", ok, passes, repairsApplied });
+
+  // Opt-in, PII-free telemetry (no-op unless MCPGEN_TELEMETRY=1).
+  emitTelemetry("verify.complete", {
+    ok,
+    passes,
+    repairsApplied,
+    toolCount: plan.tools.length,
+  });
 
   const report = renderReport({
     ok,
