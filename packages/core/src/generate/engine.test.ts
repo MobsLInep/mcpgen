@@ -93,6 +93,42 @@ describe("generateProject (petstore, recorded LLM fixtures)", () => {
     expect(showPet).toContain("pathParams: { petId: args.petId }");
   });
 
+  it("documents how to connect the server to AI clients in the README", async () => {
+    const result = await petstore();
+    const project = await generateProject(result, {
+      client: new ScriptedLlmClient(llmFixtureDir),
+      transport: "stdio",
+      auth: "apikey",
+    });
+    const readme = project.files.get("README.md")!;
+    // The connect section names all three clients and their config files.
+    expect(readme).toContain("Connect this server to an AI client");
+    expect(readme).toContain("claude_desktop_config.json");
+    expect(readme).toContain(".cursor/mcp.json");
+    expect(readme).toContain(".vscode/mcp.json");
+    // stdio config launches the compiled entry over a command/args pair.
+    expect(readme).toContain('"mcpServers"');
+    expect(readme).toContain('"servers"'); // VS Code uses the `servers` key
+    expect(readme).toContain('"command": "node"');
+    expect(readme).toContain("dist/server.js");
+    // Auth env var surfaces in the pasteable config.
+    expect(readme).toContain("MCPGEN_X_API_KEY");
+    // Copy-paste run + deploy instructions are present.
+    expect(readme).toContain("npm run build");
+    expect(readme).toContain("docker build -t");
+  });
+
+  it("emits an http URL config in the README for the http transport", async () => {
+    const result = await petstore();
+    const project = await generateProject(result, {
+      client: new ScriptedLlmClient(llmFixtureDir),
+      transport: "http",
+    });
+    const readme = project.files.get("README.md")!;
+    expect(readme).toContain('"type": "http"');
+    expect(readme).toContain("http://localhost:3000/mcp");
+  });
+
   it("derives auth config and documents it for the operator", async () => {
     const result = await petstore();
     const project = await generateProject(result, {

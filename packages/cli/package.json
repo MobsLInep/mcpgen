@@ -18,7 +18,9 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@clack/prompts": "^1.6.0",
     "@mcpgen/core": "workspace:*",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1"
   }
 }

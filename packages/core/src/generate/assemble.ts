@@ -268,6 +268,7 @@ export function assembleProject(
       SOURCE_KIND: result.metadata.kind,
       API_BASE_URL: baseUrl,
       TOOL_LIST: toolListDoc(plan),
+      CONNECT_SECTION: connectSectionDoc(packageName, options.transport, schemes),
     }),
   );
   files.set(
@@ -313,6 +314,78 @@ function toolListDoc(plan: Plan): string {
   return plan.tools
     .map((t) => `- **${t.toolName}** — ${t.description}`)
     .join("\n");
+}
+
+/**
+ * Render the README "connect to an AI client" section: ready-to-paste MCP
+ * client config for Claude Desktop, Cursor, and VS Code. The shape depends on
+ * the transport — stdio clients launch `node dist/server.js`; http clients
+ * point at the Streamable HTTP URL.
+ */
+function connectSectionDoc(
+  packageName: string,
+  transport: "stdio" | "http",
+  schemes: AuthScheme[],
+): string {
+  const serverPath = `/ABSOLUTE/PATH/TO/${packageName}/dist/server.js`;
+  const env: Record<string, string> = {};
+  for (const scheme of schemes) env[scheme.envVar] = "<your-credential>";
+
+  // The server entry under each of the three clients' config keys.
+  const entry =
+    transport === "http"
+      ? {
+          type: "http",
+          url: "http://localhost:3000/mcp",
+          ...(Object.keys(env).length > 0 ? { env } : {}),
+        }
+      : {
+          command: "node",
+          args: [serverPath],
+          ...(Object.keys(env).length > 0 ? { env } : {}),
+        };
+
+  const desktop = JSON.stringify(
+    { mcpServers: { [packageName]: entry } },
+    null,
+    2,
+  );
+  const vscode = JSON.stringify({ servers: { [packageName]: entry } }, null, 2);
+
+  const startNote =
+    transport === "http"
+      ? "Start the server first with `MCPGEN_TRANSPORT=http node dist/server.js`, then add:"
+      : "These clients launch the server for you over stdio — no need to start it yourself.";
+
+  const lines = [
+    startNote,
+    "",
+    "**Claude Desktop** — add to `claude_desktop_config.json` (Settings → Developer → Edit Config):",
+    "",
+    "```json",
+    desktop,
+    "```",
+    "",
+    "**Cursor** — add to `.cursor/mcp.json` in your project (or the global `~/.cursor/mcp.json`):",
+    "",
+    "```json",
+    desktop,
+    "```",
+    "",
+    "**VS Code** — add to `.vscode/mcp.json` (note the `servers` key):",
+    "",
+    "```json",
+    vscode,
+    "```",
+  ];
+  if (schemes.length > 0) {
+    lines.push(
+      "",
+      "Replace `<your-credential>` with a real value, or drop the `env` block and" +
+        " supply credentials via `.env` / your shell instead.",
+    );
+  }
+  return lines.join("\n");
 }
 
 /** Render the SECURITY.md operator review checklist. */
