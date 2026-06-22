@@ -2,22 +2,31 @@
   "name": "@mcpgen/web",
   "version": "0.0.0",
   "private": true,
-  "description": "mcpgen web UI (Next.js 15 App Router, placeholder).",
+  "description": "mcpgen web UI — paste an API, get a working MCP server (Next.js 15 App Router).",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "clean": "rm -rf .next .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
     "next": "^15.1.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2"
+    "@types/react-dom": "^19.0.2",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2"
   }
 }
