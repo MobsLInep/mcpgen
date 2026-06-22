@@ -1,0 +1,12 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# Dependencies allowed to run install/build scripts (esbuild powers Vitest,
+# sharp powers Next.js image optimization).
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+allowBuilds:
+  esbuild: true
+  sharp: true

@@ -1,0 +1,24 @@
+{
+  "name": "@mcpgen/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The mcpgen command-line interface.",
+  "type": "module",
+  "bin": {
+    "mcpgen": "./dist/index.js"
+  },
+  "main": "./dist/program.js",
+  "types": "./dist/program.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@mcpgen/core": "workspace:*",
+    "commander": "^12.1.0"
+  }
+}
