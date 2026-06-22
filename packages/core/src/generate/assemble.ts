@@ -37,6 +37,12 @@ export interface GeneratedProject {
   readonly toolCount: number;
   /** Whether any tool fell back to deterministic synthesis. */
   readonly usedFallback: boolean;
+  /**
+   * The plan this project was assembled from. Carried on the result so the
+   * verification loop can derive expected tool names + smoke inputs without
+   * re-running the (non-deterministic) planner.
+   */
+  readonly plan: Plan;
 }
 
 /** A credential scheme emitted into the generated `config.ts`. */
@@ -273,7 +279,13 @@ export function assembleProject(
     }),
   );
 
-  return { files, serverName: packageName, toolCount: plan.tools.length, usedFallback };
+  return {
+    files,
+    serverName: packageName,
+    toolCount: plan.tools.length,
+    usedFallback,
+    plan,
+  };
 }
 
 /** Emit the `AuthScheme[]` literal for `config.ts` (config fields only). */

@@ -83,5 +83,44 @@ export type { ToolCode } from "./generate/synthesize.js";
 export { assembleProject } from "./generate/assemble.js";
 export type { AssembleOptions } from "./generate/assemble.js";
 
+// Verification & self-repair loop (Phase 3).
+export { verifyProject } from "./verify/verify.js";
+export type {
+  VerifyOptions,
+  VerifyResult,
+  VerifyEvent,
+} from "./verify/verify.js";
+export { NodeToolchain, DRIVER_SOURCE } from "./verify/toolchain.js";
+export type {
+  Toolchain,
+  NodeToolchainOptions,
+  InstallOutcome,
+  BuildOutcome,
+  DriverSpec,
+  DriverCall,
+  DriverOutcome,
+  ToolCallResult,
+} from "./verify/toolchain.js";
+export { openApiExampleMock } from "./verify/mock.js";
+export type {
+  MockUpstream,
+  MockUpstreamFactory,
+  UpstreamMock,
+} from "./verify/mock.js";
+export { sampleFromSchema, sampleToolInput } from "./verify/sample.js";
+export type { SampleOptions } from "./verify/sample.js";
+export { repairFile } from "./verify/repair.js";
+export type {
+  RepairRequest,
+  RepairPatch,
+  StageName,
+} from "./verify/repair.js";
+export { renderReport } from "./verify/report.js";
+export type {
+  ReportInput,
+  StageOutcome,
+  RepairRecord,
+} from "./verify/report.js";
+
 export { templates };
 export type { TemplateDescriptor };

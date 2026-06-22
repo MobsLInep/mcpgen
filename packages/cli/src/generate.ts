@@ -1,23 +1,33 @@
 /**
  * `mcpgen generate <source> --out <dir>` — parse a source and render a complete
- * MCP server project to disk.
+ * MCP server project to disk, then (by default) prove it actually runs.
  *
  * The LLM is optional: with an API key we use Claude (responses cached under
  * `<out>/.mcpgen-cache` so re-runs are cheap and resumable); without one — or
  * with `--offline` — generation falls back to deterministic, LLM-free
  * synthesis so the command always works.
+ *
+ * After generation the verification loop (`--verify`, on by default) installs,
+ * builds, boots, and smoke-calls the generated server in a temp dir, repairing
+ * failures with the model up to `--max-repairs` times. On success any repaired
+ * files are written back to `<out>`; on failure a `VERIFICATION_REPORT.md` is
+ * written and the command exits non-zero.
  */
+import { writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   type AuthMode,
   type GeneratedProject,
   type LlmClient,
+  type StageName,
+  type VerifyEvent,
   FileResponseStore,
   cachingClient,
   createAnthropicClient,
   detectSource,
   generateProject,
   resolveModel,
+  verifyProject,
   writeProject,
 } from "@mcpgen/core";
 
@@ -29,6 +39,12 @@ export interface GenerateOptions {
   auth?: AuthMode;
   offline?: boolean;
   model?: string;
+  /** Run the post-generation verification loop (default: caller decides). */
+  verify?: boolean;
+  /** Cap on self-repair iterations (default 3). */
+  maxRepairs?: number;
+  /** Sink for human-readable progress lines (default: stderr). */
+  log?: (line: string) => void;
 }
 
 /** Build the LLM client, or undefined for offline/no-key generation. */
@@ -61,12 +77,51 @@ export function formatTree(project: GeneratedProject): string {
   return paths.map((p) => `  ${p}`).join("\n");
 }
 
-/** Run the generate command and return what to print to stdout. */
+const STAGE_LABELS: Record<StageName, string> = {
+  install: "install deps",
+  build: "build",
+  boot: "boot + tools/list",
+  smoke: "smoke-call tools",
+};
+
+/** Turn a verification event into a human-readable progress line. */
+function formatEvent(event: VerifyEvent): string | undefined {
+  switch (event.type) {
+    case "pass-start":
+      return `\n  pass ${event.pass}:`;
+    case "stage-start":
+      return `    ⏳ ${STAGE_LABELS[event.stage]}…`;
+    case "stage-result":
+      return `    ${event.ok ? "✅" : "❌"} ${STAGE_LABELS[event.stage]} — ${
+        event.detail
+      } (${event.durationMs}ms)`;
+    case "repair-start":
+      return `    🔧 repairing ${event.file} (${event.stage} failure)…`;
+    case "repair-result":
+      return event.applied
+        ? `    ✏️  applied patch to ${event.file}`
+        : `    ⚠️  could not repair ${event.file}${
+            event.note ? ` — ${event.note}` : ""
+          }`;
+    case "done":
+      return event.ok
+        ? `\n  ✅ verification passed in ${event.passes} pass(es), ${event.repairsApplied} repair(s).`
+        : `\n  ❌ verification failed after ${event.passes} pass(es), ${event.repairsApplied} repair(s).`;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Run the generate command. Returns `{ output, ok }`; `ok` is false only when
+ * verification ran and did not pass, so the caller can set a non-zero exit code.
+ */
 export async function runGenerate(
   source: string,
   options: GenerateOptions,
-): Promise<string> {
+): Promise<{ output: string; ok: boolean }> {
   const outDir = resolve(options.out);
+  const log = options.log ?? ((line) => process.stderr.write(`${line}\n`));
   const parsed = await (await detectSource(resolve(source))).parse();
   const { client, note } = await buildClient(outDir, options);
 
@@ -90,5 +145,42 @@ export async function runGenerate(
       "Note: some tools used deterministic fallback synthesis — review SECURITY.md.",
     );
   }
-  return lines.join("\n");
+
+  if (!options.verify) {
+    return { output: lines.join("\n"), ok: true };
+  }
+
+  log("\nVerifying the generated server (install → build → boot → smoke):");
+  const verification = await verifyProject(parsed, project.plan, project, {
+    client,
+    maxRepairs: options.maxRepairs ?? 3,
+    onEvent: (event) => {
+      const line = formatEvent(event);
+      if (line !== undefined) log(line);
+    },
+  });
+
+  // Persist any repaired files back to the output directory.
+  if (verification.repairsApplied > 0) {
+    writeProject({ ...project, files: verification.files }, outDir);
+  }
+
+  if (verification.ok) {
+    lines.push(
+      "",
+      `Verified: installed, built, booted, and smoke-called every tool` +
+        ` (${verification.passes} pass(es), ${verification.repairsApplied} repair(s)).`,
+    );
+    return { output: lines.join("\n"), ok: true };
+  }
+
+  // Failure: write the report next to the generated server.
+  const reportPath = join(outDir, "VERIFICATION_REPORT.md");
+  writeFileSync(reportPath, verification.report);
+  lines.push(
+    "",
+    `Verification FAILED after ${verification.passes} pass(es).`,
+    `See ${reportPath} for the failing stage and full logs.`,
+  );
+  return { output: lines.join("\n"), ok: false };
 }
