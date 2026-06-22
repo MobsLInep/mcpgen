@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # First-party JS/TS dependencies (pnpm workspace; Dependabot reads the root
+  # manifest + lockfile and opens grouped PRs for the whole monorepo).
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      # Keep churn low: batch non-major bumps into a single PR.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # GitHub Actions used by the workflows below.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: ci

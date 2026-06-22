@@ -137,5 +137,41 @@ export type {
   RepairRecord,
 } from "./verify/report.js";
 
+// Security audit — the OWASP secure-MCP checklist as an automated lint
+// (Phase 7). Runs over generated output and over mcpgen's own source.
+export {
+  auditFiles,
+  auditGeneratedProject,
+} from "./security/audit.js";
+export type {
+  AuditResult,
+  ChecklistItem,
+  FileMap,
+  SecurityFinding,
+  Severity,
+} from "./security/audit.js";
+
+// Observability — structured logging + opt-in, PII-free telemetry (Phase 7).
+export {
+  createLogger,
+  resolveLogLevel,
+  stderrSink,
+  emitTelemetry,
+  telemetryEnabled,
+  redactTelemetry,
+} from "./observability.js";
+export type {
+  Logger,
+  LoggerOptions,
+  LogLevel,
+  LogRecord,
+  LogSink,
+  TelemetryEvent,
+  TelemetryEventName,
+  TelemetryOptions,
+  TelemetrySink,
+  TelemetryValue,
+} from "./observability.js";
+
 export { templates };
 export type { TemplateDescriptor };

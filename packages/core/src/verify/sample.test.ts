@@ -38,6 +38,44 @@ describe("sampleFromSchema", () => {
     expect(
       sampleFromSchema({ type: "array", items: { type: "integer" } }),
     ).toEqual([1]);
+    // No items → empty array.
+    expect(sampleFromSchema({ type: "array" })).toEqual([]);
+  });
+
+  it("tunes strings to common formats", () => {
+    expect(sampleFromSchema({ type: "string", format: "date-time" })).toBe(
+      "2024-01-01T00:00:00Z",
+    );
+    expect(sampleFromSchema({ type: "string", format: "email" })).toBe(
+      "user@example.com",
+    );
+    expect(sampleFromSchema({ type: "string", format: "uri" })).toBe(
+      "https://example.com",
+    );
+    expect(sampleFromSchema({ type: "string", format: "uuid" })).toBe(
+      "00000000-0000-0000-0000-000000000000",
+    );
+    // Long minLength → padded string of the right length.
+    expect(sampleFromSchema({ type: "string", minLength: 10 })).toBe(
+      "x".repeat(10),
+    );
+  });
+
+  it("handles null, boolean whole-schemas, and untyped fallback", () => {
+    expect(sampleFromSchema({ type: "null" })).toBeNull();
+    expect(sampleFromSchema(true)).toEqual({});
+    expect(sampleFromSchema(false)).toBeUndefined();
+    expect(sampleFromSchema({})).toBe("example");
+  });
+
+  it("samples the first branch of composition keywords", () => {
+    expect(sampleFromSchema({ allOf: [{ type: "integer" }] })).toBe(1);
+    expect(sampleFromSchema({ oneOf: [{ type: "boolean" }] })).toBe(true);
+    expect(sampleFromSchema({ anyOf: [{ type: "string" }] })).toBe("example");
+  });
+
+  it("treats a nullable type array by sampling the non-null type", () => {
+    expect(sampleFromSchema({ type: ["null", "integer"], minimum: 3 })).toBe(3);
   });
 });
 

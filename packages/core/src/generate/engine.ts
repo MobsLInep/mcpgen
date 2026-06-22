@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type { ParseResult, ToolCandidate } from "../ir.js";
 import { sanitizeToolName, uniqueName } from "../ir.js";
+import { createLogger, emitTelemetry } from "../observability.js";
 import type { AuthMode, GeneratedProject } from "./assemble.js";
 import { assembleProject } from "./assemble.js";
 import type { LlmClient } from "./llm.js";
@@ -56,6 +57,17 @@ export async function generateProject(
   result: ParseResult,
   options: GenerateOptions = {},
 ): Promise<GeneratedProject> {
+  const log = createLogger("generate");
+  const transport = options.transport ?? "stdio";
+  // Telemetry is a no-op unless MCPGEN_TELEMETRY=1; properties are PII-free
+  // (source *kind*, transport, counts — never titles, paths, or spec content).
+  emitTelemetry("generate.start", {
+    sourceKind: result.metadata.kind,
+    transport,
+    toolCandidates: result.tools.length,
+    withLlm: Boolean(options.client),
+  });
+
   const candidatesByName = new Map<string, ToolCandidate>(
     result.tools.map((t) => [t.name, t]),
   );
@@ -74,10 +86,23 @@ export async function generateProject(
     ),
   );
 
-  return assembleProject(result, plan, toolCode, candidatesByName, {
-    transport: options.transport ?? "stdio",
+  const project = assembleProject(result, plan, toolCode, candidatesByName, {
+    transport,
     auth: options.auth,
   });
+
+  log.debug("assembled project", {
+    serverName: project.serverName,
+    toolCount: project.toolCount,
+  });
+  emitTelemetry("generate.complete", {
+    sourceKind: result.metadata.kind,
+    transport,
+    toolCount: project.toolCount,
+    usedFallback: project.usedFallback,
+    ok: true,
+  });
+  return project;
 }
 
 /**
