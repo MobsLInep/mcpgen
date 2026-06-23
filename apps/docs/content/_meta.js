@@ -16,7 +16,7 @@ export default {
   },
   npm: {
     title: "npm ↗",
-    href: "https://www.npmjs.com/package/mcpgen",
+    href: "https://www.npmjs.com/package/mcpgenx",
   },
   mcp: {
     title: "Model Context Protocol ↗",

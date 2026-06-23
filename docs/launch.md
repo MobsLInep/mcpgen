@@ -35,15 +35,15 @@ post anywhere until the repo and release are solid.
 - [ ] Set the `NPM_TOKEN` repo secret (npm automation token) for provenance publish.
 - [ ] Tag and push:
       `bash
-    git tag v0.1.0 && git push origin v0.1.0
-    `
+  git tag v0.1.0 && git push origin v0.1.0
+  `
 - [ ] The **Deploy** workflow publishes `mcpgen` (+ `@mcpgen/core`,
       `@mcpgen/templates`) to npm and the web image to GHCR.
 - [ ] Smoke-test the published package from a clean dir:
       `bash
-    npx mcpgen@latest doctor
-    npx mcpgen@latest generate ./openapi.yaml --out /tmp/test-server
-    `
+  npx mcpgenx@latest doctor
+  npx mcpgenx@latest generate ./openapi.yaml --out /tmp/test-server
+  `
 - [ ] Create the GitHub Release from the tag, pasting the changelog entry.
 
 ## 3. Deploy the docs + playground
@@ -85,6 +85,6 @@ use"_ — and the 3-line quickstart. Attach the demo GIF everywhere.
 - **One-liner:** Turn any API into an MCP server an AI agent can actually use.
 - **The hook:** It doesn't just generate — it installs, builds, boots, and
   smoke-tests the server before handing it to you.
-- **The proof:** `npx mcpgen generate ./openapi.yaml --out ./my-server`
+- **The proof:** `npx mcpgenx generate ./openapi.yaml --out ./my-server`
 - **The differentiator:** OpenAPI **+** GraphQL **+** code, secure-by-default,
   works offline, deploy kit in the box.
