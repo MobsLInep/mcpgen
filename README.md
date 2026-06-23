@@ -65,26 +65,26 @@ Prefer to be walked through it? `npx mcpgenx init` is a guided wizard.
 
 ## Features
 
-- 🧩 **Three inputs, one engine** — OpenAPI 3.0/3.1, GraphQL SDL/introspection,
+- **Three inputs, one engine** — OpenAPI 3.0/3.1, GraphQL SDL/introspection,
   and Express/Fastify code all normalize to a shared IR.
-- 🔒 **Typed & validated** — Zod-validated inputs, one safe `http.ts` request
+- **Typed & validated** — Zod-validated inputs, one safe `http.ts` request
   builder, env-sourced credentials. No raw string interpolation into URLs.
-- ✅ **Self-verifying** — install → build → boot → smoke-test against a mocked
+- **Self-verifying** — install → build → boot → smoke-test against a mocked
   upstream, with model-driven self-repair on failure.
-- 🚀 **Deploy-ready** — every server ships a Dockerfile, Compose, and Fly /
+- **Deploy-ready** — every server ships a Dockerfile, Compose, and Fly /
   Render / Railway configs, plus a `/healthz` probe.
-- 🔌 **Connects everywhere** — copy-paste config for Claude Desktop, Cursor, and
+- **Connects everywhere** — copy-paste config for Claude Desktop, Cursor, and
   VS Code is generated into each server's README.
-- 🛡️ **Secure by default** — generated code passes an automated OWASP secure-MCP
+- **Secure by default** — generated code passes an automated OWASP secure-MCP
   audit; mcpgen's own source is linted by the same rules.
-- 📴 **Works offline** — no API key? Generation falls back to a deterministic,
+- **Works offline** — no API key? Generation falls back to a deterministic,
   IR-only path so you always get a buildable server.
-- 🖥️ **CLI + Web** — a polished `mcpgen` CLI and a paste-and-download web UI.
+- **CLI + Web** — a polished `mcpgen` CLI and a paste-and-download web UI.
 
 ## How it works
 
 ```text
- source ──▶ parse ──▶  IR  ──▶ plan ──▶ synthesize ──▶ assemble ──▶ verify ──▶ ✅ server
+ source ──▶ parse ──▶  IR  ──▶ plan ──▶ synthesize ──▶ assemble ──▶ verify ──▶ server
 (openapi/  (no LLM)   (tools +        (Claude)    (Zod + handlers)  (templates) (install·build·
  graphql/              metadata)                                                  boot·smoke + repair)
  repo)

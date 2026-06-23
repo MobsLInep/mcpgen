@@ -91,17 +91,58 @@
   border-color: var(--mcpgen-mint);
 }
 
-/* ---- Cards: lift + mint hover ------------------------------------------- */
-.nextra-card {
+/* ---- Cards: custom grid, title-first, mint hover ------------------------ */
+.mcpgen-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1.25rem 0;
+}
+@media (max-width: 768px) {
+  .mcpgen-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.mcpgen-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  text-decoration: none !important;
+  color: inherit !important;
   transition:
     transform 0.15s ease,
     border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
-.nextra-card:hover {
+.mcpgen-card:hover {
   transform: translateY(-2px);
-  border-color: var(--mcpgen-mint) !important;
+  border-color: var(--mcpgen-mint);
   box-shadow: 0 12px 28px -16px var(--mcpgen-mint);
+  background: var(--mcpgen-mint-soft);
+}
+.mcpgen-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 650;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+.mcpgen-card-title .arrow {
+  color: var(--mcpgen-mint);
+  transition: transform 0.15s ease;
+}
+.mcpgen-card:hover .mcpgen-card-title .arrow {
+  transform: translateX(3px);
+}
+.mcpgen-card-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.72;
 }
 
 /* ---- Logo mark ---------------------------------------------------------- */

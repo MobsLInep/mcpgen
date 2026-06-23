@@ -63,12 +63,12 @@ with a `/healthz` liveness probe.
 
 ## Which should I pick?
 
-|                      | stdio       | Streamable HTTP            |
-| -------------------- | ----------- | -------------------------- |
-| Local, one user      | ✅ simplest | works, more setup          |
-| Remote / shared      | ✗           | ✅                         |
-| Needs a network port | no          | yes (`/mcp`, `/healthz`)   |
-| Hardening required   | minimal     | TLS + CORS + allowed-hosts |
+|                      | stdio          | Streamable HTTP            |
+| -------------------- | -------------- | -------------------------- |
+| Local, one user      | best, simplest | works, more setup          |
+| Remote / shared      | no             | yes                        |
+| Needs a network port | no             | yes (`/mcp`, `/healthz`)   |
+| Hardening required   | minimal        | TLS + CORS + allowed-hosts |
 
 When in doubt, start with **stdio** for local use and switch to **http** when you
 deploy.

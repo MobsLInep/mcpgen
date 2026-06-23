@@ -10,7 +10,7 @@ mcpgen is a pipeline. An input goes in; a verified MCP server comes out. Three
 ideas carry the whole thing: the **IR**, **generation**, and **verification**.
 
 ```text
- source ──▶ parse ──▶  IR  ──▶ generate ──▶ project ──▶ verify ──▶ ✅ server
+ source ──▶ parse ──▶  IR  ──▶ generate ──▶ project ──▶ verify ──▶ server
 (openapi/                (tools +            (typed MCP    (install·build·
  graphql/                 metadata)           server code)  boot·smoke + repair)
  repo)
