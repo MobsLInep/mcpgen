@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "search:index": "pagefind --site .next/server/app --output-path public/_pagefind",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .next .turbo *.tsbuildinfo"
+    "clean": "rm -rf .next .turbo public/_pagefind *.tsbuildinfo"
   },
   "dependencies": {
     "next": "^15.1.2",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
+    "pagefind": "^1.3.0",
     "typescript": "^5.7.2"
   }
 }
