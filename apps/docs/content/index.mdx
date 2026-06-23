@@ -2,8 +2,6 @@
 title: Introduction
 ---
 
-import { Cards } from "nextra/components";
-
 <div className="mcpgen-hero">
 
 # mcpgen
@@ -49,20 +47,40 @@ secure-MCP checklist out of the box.
 
 ## What you get
 
-<Cards>
-  <Cards.Card icon={<span>🚀</span>} title="Quickstart" href="/quickstart" arrow>
-    Generate and run your first server in three lines.
-  </Cards.Card>
-  <Cards.Card icon={<span>🧩</span>} title="Concepts" href="/concepts" arrow>
-    How the IR, generation, and verification fit together.
-  </Cards.Card>
-  <Cards.Card icon={<span>📚</span>} title="Guides" href="/guides/openapi" arrow>
-    OpenAPI, GraphQL, codebases, transports, auth, deploy.
-  </Cards.Card>
-  <Cards.Card icon={<span>🔌</span>} title="Connect a client" href="/connect" arrow>
-    Wire the server into Claude Desktop, Cursor, or VS Code.
-  </Cards.Card>
-</Cards>
+<div className="mcpgen-cards">
+  <a className="mcpgen-card" href="/quickstart">
+    <span className="mcpgen-card-title">
+      Quickstart <span className="arrow">→</span>
+    </span>
+    <span className="mcpgen-card-desc">
+      Generate and run your first server in three lines.
+    </span>
+  </a>
+  <a className="mcpgen-card" href="/concepts">
+    <span className="mcpgen-card-title">
+      Concepts <span className="arrow">→</span>
+    </span>
+    <span className="mcpgen-card-desc">
+      How the IR, generation, and verification fit together.
+    </span>
+  </a>
+  <a className="mcpgen-card" href="/guides/openapi">
+    <span className="mcpgen-card-title">
+      Guides <span className="arrow">→</span>
+    </span>
+    <span className="mcpgen-card-desc">
+      OpenAPI, GraphQL, codebases, transports, auth, deploy.
+    </span>
+  </a>
+  <a className="mcpgen-card" href="/connect">
+    <span className="mcpgen-card-title">
+      Connect a client <span className="arrow">→</span>
+    </span>
+    <span className="mcpgen-card-desc">
+      Wire the server into Claude Desktop, Cursor, or VS Code.
+    </span>
+  </a>
+</div>
 
 ## Highlights
 
