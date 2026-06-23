@@ -10,13 +10,13 @@ server back. Verified to run, not just generated.
 
 [![CI](https://github.com/MobsLInep/mcpgen/actions/workflows/ci.yml/badge.svg)](https://github.com/MobsLInep/mcpgen/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/MobsLInep/mcpgen/actions/workflows/codeql.yml/badge.svg)](https://github.com/MobsLInep/mcpgen/actions/workflows/codeql.yml)
-[![npm](https://img.shields.io/npm/v/mcpgen.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/mcpgen)
+[![npm](https://img.shields.io/npm/v/mcpgenx.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/mcpgenx)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![stars](https://img.shields.io/github/stars/MobsLInep/mcpgen?style=social)](https://github.com/MobsLInep/mcpgen/stargazers)
 
 ```bash
-npx mcpgen generate ./openapi.yaml --out ./my-server
+npx mcpgenx generate ./openapi.yaml --out ./my-server
 ```
 
 <img src="./docs/assets/demo.svg" alt="mcpgen generating and verifying an MCP server from an OpenAPI spec" width="720" />
@@ -49,12 +49,12 @@ Requires **Node 20+**. An `ANTHROPIC_API_KEY` is optional (without one, mcpgen
 generates in a deterministic offline mode).
 
 ```bash
-npx mcpgen doctor                                          # 1. check your env
-npx mcpgen generate ./openapi.yaml --out ./my-server      # 2. generate + verify
+npx mcpgenx doctor                                          # 1. check your env
+npx mcpgenx generate ./openapi.yaml --out ./my-server      # 2. generate + verify
 cd my-server && npm install && npm run build && node dist/server.js   # 3. run
 ```
 
-Prefer to be walked through it? `npx mcpgen init` is a guided wizard.
+Prefer to be walked through it? `npx mcpgenx init` is a guided wizard.
 
 → Full docs: **[quickstart](./apps/docs/content/quickstart.mdx)** ·
 **[concepts](./apps/docs/content/concepts.mdx)** ·

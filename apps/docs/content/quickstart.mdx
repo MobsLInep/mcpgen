@@ -15,7 +15,7 @@ deterministic offline mode.
 ### Check your environment
 
 ```bash
-npx mcpgen doctor
+npx mcpgenx doctor
 ```
 
 `doctor` reports your Node version, whether an Anthropic key is set, and whether
@@ -26,7 +26,7 @@ Docker is available. Add `--json` for a machine-readable report.
 See the tools mcpgen would create before generating anything:
 
 ```bash
-npx mcpgen inspect ./openapi.yaml
+npx mcpgenx inspect ./openapi.yaml
 ```
 
 ```text
@@ -50,7 +50,7 @@ Tools:     5
   <Tabs.Tab>
 
 ```bash
-npx mcpgen init
+npx mcpgenx init
 ```
 
 `init` walks you through source → transport → auth → output, then generates with
@@ -60,7 +60,7 @@ a live spinner and prints next steps.
   <Tabs.Tab>
 
 ```bash
-npx mcpgen generate ./openapi.yaml --out ./my-server
+npx mcpgenx generate ./openapi.yaml --out ./my-server
 ```
 
 This generates **and verifies** (install → build → boot → smoke-test). Add

@@ -64,14 +64,32 @@ jobs:
       contents: read
       id-token: write # required for npm provenance
     steps:
+      # Skip cleanly (job stays green) until npm publishing is configured. Set
+      # the NPM_TOKEN repo secret to enable it; `secrets` can't be used in a
+      # job-level `if`, so we gate the steps on this guard instead.
+      - name: Check for npm token
+        id: guard
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::notice::NPM_TOKEN secret not set — skipping npm publish. Add it (and create the @mcpgen npm org) to enable publishing."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.guard.outputs.publish == 'true'
 
       - name: Install pnpm
+        if: steps.guard.outputs.publish == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 11
 
       - name: Setup Node
+        if: steps.guard.outputs.publish == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -79,15 +97,18 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
+        if: steps.guard.outputs.publish == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        if: steps.guard.outputs.publish == 'true'
         run: pnpm build
 
-      - name: Publish (mcpgen + @mcpgen/core + @mcpgen/templates)
+      - name: Publish (mcpgenx + @mcpgen/core + @mcpgen/templates)
         # `publishConfig.provenance` is set in each package.json, so --provenance
         # is implied; pass it explicitly to be safe. Workspace deps are rewritten
         # to real versions by pnpm at publish time.
+        if: steps.guard.outputs.publish == 'true'
         run: pnpm -r publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

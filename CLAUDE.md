@@ -51,26 +51,26 @@ operations as MCP tools an AI agent can call.
 
 These are intentional and should not be swapped without a deliberate decision:
 
-| Concern              | Choice                                                                                                                                             |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Package manager      | **pnpm** (workspaces)                                                                                                                              |
-| Monorepo task runner | **Turborepo**                                                                                                                                      |
-| Language             | **TypeScript**, `strict` mode, ESM                                                                                                                 |
-| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext**                                                                                |
-| CLI framework        | **commander**                                                                                                                                      |
-| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)                                                                                     |
-| Web                  | **Next.js 15**, App Router, React 19                                                                                                               |
-| Web styling          | **Tailwind v4** (`@theme` tokens) + hand-vendored shadcn-style primitives (cva/clsx/tailwind-merge), **lucide-react** icons — no Radix             |
-| API server           | standalone **`node:http`** (no framework), **jszip** for downloads                                                                                 |
-| E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                                |
-| Lint                 | **ESLint flat config** + typescript-eslint                                                                                                         |
-| Format               | **Prettier**                                                                                                                                       |
-| Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                              |
-| Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                            |
-| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                                |
-| Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                                         |
-| Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgen`, web image to **GHCR**            |
-| Docs site            | **Nextra 4** (Next.js 15 App Router) in `apps/docs`; MDX in `content/`. Pinned to **zod 4.3.x** in its subtree (theme incompatible with zod ≥ 4.4) |
+| Concern              | Choice                                                                                                                                                                                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package manager      | **pnpm** (workspaces)                                                                                                                                                                  |
+| Monorepo task runner | **Turborepo**                                                                                                                                                                          |
+| Language             | **TypeScript**, `strict` mode, ESM                                                                                                                                                     |
+| Module system        | ESM everywhere (`"type": "module"`); libs compile with **NodeNext**                                                                                                                    |
+| CLI framework        | **commander**                                                                                                                                                                          |
+| CLI prompts / color  | **@clack/prompts** (wizard + spinners), **picocolors** (color)                                                                                                                         |
+| Web                  | **Next.js 15**, App Router, React 19                                                                                                                                                   |
+| Web styling          | **Tailwind v4** (`@theme` tokens) + hand-vendored shadcn-style primitives (cva/clsx/tailwind-merge), **lucide-react** icons — no Radix                                                 |
+| API server           | standalone **`node:http`** (no framework), **jszip** for downloads                                                                                                                     |
+| E2E tests            | **Playwright** (`apps/web/e2e`, runs against the `MCPGEN_FAKE` API)                                                                                                                    |
+| Lint                 | **ESLint flat config** + typescript-eslint                                                                                                                                             |
+| Format               | **Prettier**                                                                                                                                                                           |
+| Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                                                                  |
+| Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                                                                |
+| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                                                                    |
+| Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                                                                             |
+| Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgenx` (name `mcpgen` was taken; bin stays `mcpgen`), web image to **GHCR** |
+| Docs site            | **Nextra 4** (Next.js 15 App Router) in `apps/docs`; MDX in `content/`. Pinned to **zod 4.3.x** in its subtree (theme incompatible with zod ≥ 4.4)                                     |
 
 Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
 
@@ -211,8 +211,9 @@ Shared TS settings live in `tsconfig.base.json`; each package/app extends it.
   hardening notes (all derived in `assemble.ts`). `engine.test.ts` asserts the
   deploy files + health/OAuth wiring; `verify/docker-smoke.test.ts` (opt-in via
   `MCPGEN_DOCKER_SMOKE=1`) actually `docker build`s a generated server and polls
-  `/healthz`. **mcpgen itself:** `packages/cli` now publishes as the **unscoped
-  `mcpgen`** package (so `npx mcpgen` works with no global install), with
+  `/healthz`. **mcpgen itself:** `packages/cli` now publishes as **`mcpgenx`**
+  (the unscoped name `mcpgen` was already taken on npm; the installed bin stays
+  `mcpgen`, so `npx mcpgenx` works with no global install), with
   `@mcpgen/core` + `@mcpgen/templates` made publishable too (all `publishConfig`
   `access:public` + `provenance:true`, versioned `0.1.0`). `apps/web` builds to
   Next **standalone** output (`next.config.mjs`) with `apps/web/Dockerfile`;

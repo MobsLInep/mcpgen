@@ -10,8 +10,8 @@ MCP servers speak to clients over a **transport**. mcpgen generates a server tha
 supports both of the standard ones, and you pick the default at generation time:
 
 ```bash
-npx mcpgen generate ./openapi.yaml --out ./my-server --transport stdio   # default
-npx mcpgen generate ./openapi.yaml --out ./my-server --transport http
+npx mcpgenx generate ./openapi.yaml --out ./my-server --transport stdio   # default
+npx mcpgenx generate ./openapi.yaml --out ./my-server --transport http
 ```
 
 The generated server reads `MCPGEN_TRANSPORT` at runtime too, so you can switch

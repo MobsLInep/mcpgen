@@ -18,9 +18,9 @@ mcpgen derives upstream auth from the source's security schemes, or you can forc
 a mode:
 
 ```bash
-npx mcpgen generate ./openapi.yaml --out ./my-server --auth apikey
-npx mcpgen generate ./openapi.yaml --out ./my-server --auth oauth
-npx mcpgen generate ./openapi.yaml --out ./my-server --auth none
+npx mcpgenx generate ./openapi.yaml --out ./my-server --auth apikey
+npx mcpgenx generate ./openapi.yaml --out ./my-server --auth oauth
+npx mcpgenx generate ./openapi.yaml --out ./my-server --auth none
 ```
 
 Credentials are **always read from environment variables** — never written into

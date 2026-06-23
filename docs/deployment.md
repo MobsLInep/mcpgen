@@ -10,15 +10,15 @@ generates**, and **mcpgen itself** (the CLI + the web app/API).
 Every project mcpgen emits is deploy-ready out of the box. Alongside the source
 it writes:
 
-| File | Purpose |
-| --- | --- |
-| `Dockerfile` | Hardened multi-stage build, with a `HEALTHCHECK` on `/healthz`. |
-| `.dockerignore` | Keeps the build context (and image) small. |
-| `docker-compose.yml` | Local Compose service over the HTTP transport. |
-| `fly.toml` | Fly.io app config (build, env, `/healthz` check). |
-| `render.yaml` | Render Blueprint (Docker build, health check, secret env vars). |
-| `railway.json` | Railway config (Dockerfile build, `/healthz` check). |
-| `.env.example` | Every env var the server reads, documented. |
+| File                 | Purpose                                                         |
+| -------------------- | --------------------------------------------------------------- |
+| `Dockerfile`         | Hardened multi-stage build, with a `HEALTHCHECK` on `/healthz`. |
+| `.dockerignore`      | Keeps the build context (and image) small.                      |
+| `docker-compose.yml` | Local Compose service over the HTTP transport.                  |
+| `fly.toml`           | Fly.io app config (build, env, `/healthz` check).               |
+| `render.yaml`        | Render Blueprint (Docker build, health check, secret env vars). |
+| `railway.json`       | Railway config (Dockerfile build, `/healthz` check).            |
+| `.env.example`       | Every env var the server reads, documented.                     |
 
 The server speaks **Streamable HTTP** at `/mcp` and answers a liveness probe at
 `/healthz` (`{"status":"ok",...}`).
@@ -85,19 +85,19 @@ MCPGEN_DOCKER_SMOKE=1 pnpm vitest run docker-smoke
 
 ## 2. Deploying mcpgen itself
 
-### The CLI on npm (`npx mcpgen`)
+### The CLI on npm (`npx mcpgenx`)
 
-`packages/cli` publishes as the unscoped package **`mcpgen`**, so it runs with no
-global install:
+`packages/cli` publishes as **`mcpgenx`** (the unscoped name `mcpgen` was already
+taken on npm) and installs the `mcpgen` command, so it runs with no global install:
 
 ```bash
-npx mcpgen generate ./openapi.yaml --out ./my-server
-npx mcpgen init        # guided wizard
+npx mcpgenx generate ./openapi.yaml --out ./my-server
+npx mcpgenx init        # guided wizard
 ```
 
 Publishing is automated: pushing a `v*` tag runs the **Deploy** workflow's
 `publish-cli` job, which builds and runs `pnpm -r publish --provenance` — this
-publishes `mcpgen`, `@mcpgen/core`, and `@mcpgen/templates` to npm with [build
+publishes `mcpgenx`, `@mcpgen/core`, and `@mcpgen/templates` to npm with [build
 provenance](https://docs.npmjs.com/generating-provenance-statements). It needs:
 
 - repo secret `NPM_TOKEN` (an npm automation token), and

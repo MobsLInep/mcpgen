@@ -1,7 +1,7 @@
 {
-  "name": "mcpgen",
+  "name": "mcpgenx",
   "version": "0.1.0",
-  "description": "Generate a working, typed, deployable MCP server from an OpenAPI spec, GraphQL schema, or code repo.",
+  "description": "Generate a working, typed, deployable MCP server from an OpenAPI spec, GraphQL schema, or code repo. Installs the `mcpgen` command.",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/MobsLInep/mcpgen#readme",
