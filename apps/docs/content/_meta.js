@@ -11,15 +11,15 @@ export default {
     title: "Links",
   },
   github: {
-    title: "GitHub ↗",
+    title: "GitHub",
     href: "https://github.com/MobsLInep/mcpgen",
   },
   npm: {
-    title: "npm ↗",
+    title: "npm",
     href: "https://www.npmjs.com/package/mcpgenx",
   },
   mcp: {
-    title: "Model Context Protocol ↗",
+    title: "Model Context Protocol",
     href: "https://modelcontextprotocol.io",
   },
 };
