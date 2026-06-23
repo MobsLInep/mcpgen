@@ -84,7 +84,7 @@ jobs:
 
       - name: Install pnpm
         if: steps.guard.outputs.publish == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
         if: steps.guard.outputs.publish == 'true'
