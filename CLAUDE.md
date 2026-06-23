@@ -67,7 +67,7 @@ These are intentional and should not be swapped without a deliberate decision:
 | Format               | **Prettier**                                                                                                                                                                           |
 | Tests                | **Vitest** (repo root); coverage via **@vitest/coverage-v8** (enforced thresholds); property tests via **fast-check**                                                                  |
 | Security CI          | **secure-MCP audit lint** (`scripts/security-lint.mjs`), **pnpm audit**, **CodeQL** (security-extended), **Dependabot**                                                                |
-| Node                 | **20+** (pinned via `.nvmrc` + `engines`); web/api Docker images run **node:22-alpine** (corepack pnpm 11 needs it)                                                                    |
+| Node                 | dev/CI need **22+** (`.nvmrc` pins 22; pnpm 11.8 requires Node ≥22.13); published CLI + generated servers target **20+**; web/api Docker images run **node:22-alpine**                  |
 | Containers           | **Docker** multi-stage (web → Next `standalone`); root **`docker-compose.yml`** for web+api local bring-up                                                                             |
 | Deploy targets       | Generated servers ship **Docker Compose + Fly + Render + Railway** configs; CLI publishes to **npm** as `mcpgenx` (name `mcpgen` was taken; bin stays `mcpgen`), web image to **GHCR** |
 | Docs site            | **Nextra 4** (Next.js 15 App Router) in `apps/docs`; MDX in `content/`. Pinned to **zod 4.3.x** in its subtree (theme incompatible with zod ≥ 4.4)                                     |

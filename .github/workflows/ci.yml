@@ -16,7 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22]
+        # The dev toolchain's pnpm (11.8) requires Node >= 22.13, so CI runs on
+        # 22. (The *generated* servers and the published CLI still target Node
+        # 20+ — only the monorepo's own tooling needs 22+.)
+        node-version: [22]
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +67,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies

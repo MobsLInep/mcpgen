@@ -39,8 +39,12 @@ describe("panel + summary", () => {
   it("draws a box whose rows share a width", () => {
     const out = panel("title", ["a", "longer line"]);
     const rows = out.split("\n");
-    const widths = new Set(rows.map((r) => [...r].length));
-    // All rows should render at the same visible width.
+    // Measure *visible* width — strip ANSI so the assertion holds whether or
+    // not color is enabled (picocolors turns color on under CI, which would
+    // otherwise inflate the colored title row's raw length). The regex is built
+    // from the ESC char code to avoid a control character in the source.
+    const ansi = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+    const widths = new Set(rows.map((r) => [...r.replace(ansi, "")].length));
     expect(widths.size).toBe(1);
   });
 
