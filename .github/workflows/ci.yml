@@ -20,10 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No `version:` — it's read from the `packageManager` field in package.json
+      # (pnpm/action-setup errors if both are specified).
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - name: Setup Node ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -60,8 +60,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - name: Setup Node
         uses: actions/setup-node@v4
