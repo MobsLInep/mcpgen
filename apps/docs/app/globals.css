@@ -38,7 +38,10 @@
 }
 .mcpgen-hero h1 {
   font-size: clamp(2.1rem, 4vw, 3rem);
-  line-height: 1.05;
+  /* Roomy line-height + a little vertical padding so descenders (p, g) aren't
+     clipped by background-clip: text. */
+  line-height: 1.25;
+  padding-bottom: 0.12em;
   letter-spacing: -0.03em;
   margin: 0 0 0.5rem;
   background: linear-gradient(
