@@ -14,8 +14,13 @@ concurrency:
 
 jobs:
   # --- Build + push the web UI image to GHCR -----------------------------
+  # Opt-in: set the repo variable PUBLISH_WEB_IMAGE=true (Settings → Secrets and
+  # variables → Actions → Variables) to enable. Off by default so a fresh repo's
+  # Deploy stays green — pushing to GHCR also needs the package to be writable by
+  # this repo (delete any orphaned ghcr.io/<owner>/mcpgen-web first).
   web-image:
     name: build & push web image
+    if: vars.PUBLISH_WEB_IMAGE == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -90,7 +95,7 @@ jobs:
         if: steps.guard.outputs.publish == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
 

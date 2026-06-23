@@ -5,7 +5,9 @@ and built to be hacked on. This guide gets you from clone to PR.
 
 ## Prerequisites
 
-- **Node 20+** (`.nvmrc` pins the major version; run `nvm use`).
+- **Node 22+** for development (`.nvmrc` pins it; run `nvm use`). The pinned
+  pnpm requires Node ≥22.13. _(The published CLI and generated servers still run
+  on Node 20+ — only the monorepo's own tooling needs 22+.)_
 - **pnpm 9+** (`corepack enable` will provide the pinned version).
 
 ## Local development
@@ -18,7 +20,7 @@ pnpm build
 ```
 
 The full local gate — everything required before a PR, and what CI runs on Node
-20 and 22 — is:
+22 — is:
 
 ```bash
 pnpm install && pnpm build && pnpm lint && pnpm typecheck && pnpm test
