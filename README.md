@@ -11,6 +11,7 @@ server back. Verified to run, not just generated.
 [![CI](https://github.com/MobsLInep/mcpgen/actions/workflows/ci.yml/badge.svg)](https://github.com/MobsLInep/mcpgen/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/MobsLInep/mcpgen/actions/workflows/codeql.yml/badge.svg)](https://github.com/MobsLInep/mcpgen/actions/workflows/codeql.yml)
 [![npm](https://img.shields.io/npm/v/mcpgenx.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/mcpgenx)
+[![docs](https://img.shields.io/badge/docs-mcpgen--cli.vercel.app-0ea5e9)](https://mcpgen-cli.vercel.app)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![stars](https://img.shields.io/github/stars/MobsLInep/mcpgen?style=social)](https://github.com/MobsLInep/mcpgen/stargazers)
@@ -56,10 +57,11 @@ cd my-server && npm install && npm run build && node dist/server.js   # 3. run
 
 Prefer to be walked through it? `npx mcpgenx init` is a guided wizard.
 
-→ Full docs: **[quickstart](./apps/docs/content/quickstart.mdx)** ·
-**[concepts](./apps/docs/content/concepts.mdx)** ·
-**[guides](./apps/docs/content/guides)** ·
-**[connect a client](./apps/docs/content/connect.mdx)**
+→ **Full docs: [mcpgen-cli.vercel.app](https://mcpgen-cli.vercel.app)** —
+[quickstart](https://mcpgen-cli.vercel.app/quickstart) ·
+[concepts](https://mcpgen-cli.vercel.app/concepts) ·
+[guides](https://mcpgen-cli.vercel.app/guides/openapi) ·
+[connect a client](https://mcpgen-cli.vercel.app/connect)
 
 ## Features
 
@@ -91,8 +93,8 @@ Prefer to be walked through it? `npx mcpgenx init` is a guided wizard.
 Parsing is deterministic and LLM-free; the model proposes the tool set and writes
 handler bodies (with a deterministic fallback); assembly renders real templates;
 and verification proves the result runs. See
-**[Concepts](./apps/docs/content/concepts.mdx)** and
-**[Architecture](./apps/docs/content/architecture.mdx)**.
+**[Concepts](https://mcpgen-cli.vercel.app/concepts)** and
+**[Architecture](https://mcpgen-cli.vercel.app/architecture)**.
 
 ## Why not hand-write it?
 
