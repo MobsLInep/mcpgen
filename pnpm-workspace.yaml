@@ -19,3 +19,7 @@ allowBuilds:
 overrides:
   nextra>zod: "4.3.5"
   nextra-theme-docs>zod: "4.3.5"
+  # Next.js 15 hard-pins postcss@8.4.31, which a security advisory flags
+  # (patched in >= 8.5.10). Force the patched postcss (8.5.15 is already pulled
+  # in by Tailwind) across the tree; postcss 8.5.x is API-compatible with 8.4.x.
+  postcss: "^8.5.15"
