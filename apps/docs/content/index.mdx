@@ -4,13 +4,25 @@ title: Introduction
 
 import { Cards } from "nextra/components";
 
+<div className="mcpgen-hero">
+
 # mcpgen
 
-**mcpgen** turns an existing API surface — an **OpenAPI spec**, a **GraphQL
-schema**, or a **code repository** — into a working, typed, deployable
-[Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. The
-generated server exposes the source API's operations as MCP **tools** that an AI
-agent (Claude Desktop, Cursor, VS Code, your own agent) can call.
+Turn an **OpenAPI spec**, a **GraphQL schema**, or a **code repository** into a
+working, typed, deployable
+[Model Context Protocol](https://modelcontextprotocol.io) server — verified to
+run, not just generated.
+
+<div className="mcpgen-cta">
+  <a className="primary" href="/quickstart">Get started →</a>
+  <a className="ghost" href="https://github.com/MobsLInep/mcpgen">GitHub</a>
+  <a className="ghost" href="https://www.npmjs.com/package/mcpgenx">npm</a>
+</div>
+
+</div>
+
+The generated server exposes the source API's operations as MCP **tools** that an
+AI agent (Claude Desktop, Cursor, VS Code, or your own) can call.
 
 ```bash
 npx mcpgenx generate ./openapi.yaml --out ./my-server
@@ -38,16 +50,16 @@ secure-MCP checklist out of the box.
 ## What you get
 
 <Cards>
-  <Cards.Card title="Quickstart" href="/quickstart" arrow>
+  <Cards.Card icon={<span>🚀</span>} title="Quickstart" href="/quickstart" arrow>
     Generate and run your first server in three lines.
   </Cards.Card>
-  <Cards.Card title="Concepts" href="/concepts" arrow>
+  <Cards.Card icon={<span>🧩</span>} title="Concepts" href="/concepts" arrow>
     How the IR, generation, and verification fit together.
   </Cards.Card>
-  <Cards.Card title="Guides" href="/guides/openapi" arrow>
+  <Cards.Card icon={<span>📚</span>} title="Guides" href="/guides/openapi" arrow>
     OpenAPI, GraphQL, codebases, transports, auth, deploy.
   </Cards.Card>
-  <Cards.Card title="Connect a client" href="/connect" arrow>
+  <Cards.Card icon={<span>🔌</span>} title="Connect a client" href="/connect" arrow>
     Wire the server into Claude Desktop, Cursor, or VS Code.
   </Cards.Card>
 </Cards>

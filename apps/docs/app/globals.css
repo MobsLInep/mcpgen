@@ -1,0 +1,117 @@
+/* mcpgen docs — brand layer on top of the Nextra docs theme.
+   Nextra derives links/accents from the --nextra-primary-* HSL vars; we point
+   them at mcpgen's electric-mint so the site reads as ours, not stock Nextra. */
+:root {
+  --nextra-primary-hue: 162deg;
+  --nextra-primary-saturation: 84%;
+  --nextra-primary-lightness: 38%;
+}
+.dark {
+  --nextra-primary-hue: 158deg;
+  --nextra-primary-saturation: 72%;
+  --nextra-primary-lightness: 52%;
+}
+
+/* Brand tokens for our own elements. */
+:root {
+  --mcpgen-mint: hsl(160 84% 39%);
+  --mcpgen-mint-soft: hsl(160 84% 39% / 0.12);
+}
+.dark {
+  --mcpgen-mint: hsl(158 72% 56%);
+  --mcpgen-mint-soft: hsl(158 72% 56% / 0.14);
+}
+
+/* ---- Home hero ---------------------------------------------------------- */
+.mcpgen-hero {
+  margin: 1.5rem 0 2.5rem;
+  padding: 2.25rem 2rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--mcpgen-mint) 28%, transparent);
+  background:
+    radial-gradient(
+      120% 120% at 0% 0%,
+      var(--mcpgen-mint-soft),
+      transparent 60%
+    ),
+    color-mix(in oklab, var(--mcpgen-mint) 4%, transparent);
+}
+.mcpgen-hero h1 {
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(
+    120deg,
+    currentColor 30%,
+    var(--mcpgen-mint)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.mcpgen-hero p {
+  font-size: 1.075rem;
+  line-height: 1.6;
+  max-width: 46rem;
+  opacity: 0.85;
+  margin: 0;
+}
+.mcpgen-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.mcpgen-cta a {
+  text-decoration: none !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.6rem;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+.mcpgen-cta a.primary {
+  background: var(--mcpgen-mint);
+  color: #04140d;
+  box-shadow: 0 6px 20px -8px var(--mcpgen-mint);
+}
+.mcpgen-cta a.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px -8px var(--mcpgen-mint);
+}
+.mcpgen-cta a.ghost {
+  border: 1px solid color-mix(in oklab, currentColor 22%, transparent);
+}
+.mcpgen-cta a.ghost:hover {
+  background: var(--mcpgen-mint-soft);
+  border-color: var(--mcpgen-mint);
+}
+
+/* ---- Cards: lift + mint hover ------------------------------------------- */
+.nextra-card {
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.nextra-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--mcpgen-mint) !important;
+  box-shadow: 0 12px 28px -16px var(--mcpgen-mint);
+}
+
+/* ---- Logo mark ---------------------------------------------------------- */
+.mcpgen-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.mcpgen-logo svg {
+  flex: none;
+}
