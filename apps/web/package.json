@@ -17,16 +17,16 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.469.0",
     "next": "^15.1.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
-    "@tailwindcss/postcss": "^4.0.0",
-    "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2",
-    "tailwindcss": "^4.0.0",
-    "tsx": "^4.19.2"
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.10"
   }
 }
