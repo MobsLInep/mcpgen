@@ -16,12 +16,12 @@
     "next": "^15.5.25",
     "nextra": "^4.0.0",
     "nextra-theme-docs": "^4.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "@types/react": "^19.0.2",
+    "@types/react": "^19.2.18",
     "pagefind": "^1.3.0",
     "typescript": "^5.7.2"
   }
