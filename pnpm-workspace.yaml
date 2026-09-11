@@ -20,6 +20,10 @@ overrides:
   nextra>zod: "4.3.5"
   nextra-theme-docs>zod: "4.3.5"
   # Next.js 15 hard-pins postcss@8.4.31, which a security advisory flags
-  # (patched in >= 8.5.10). Force the patched postcss (8.5.15 is already pulled
-  # in by Tailwind) across the tree; postcss 8.5.x is API-compatible with 8.4.x.
-  postcss: "^8.5.15"
+  # (latest advisory patched in >= 8.5.18). Force the patched postcss across the
+  # tree; postcss 8.5.x is API-compatible with 8.4.x.
+  postcss: "^8.5.18"
+  # speech-rule-engine (via nextra's MathJax support) hard-pins
+  # @xmldom/xmldom@0.9.10, which has several high-severity advisories
+  # (patched in >= 0.9.12). Same-minor patch release, so API-compatible.
+  "@xmldom/xmldom": "^0.9.12"
